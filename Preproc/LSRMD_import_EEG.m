@@ -10,7 +10,7 @@ ft_defaults;
 folders=dir([data_path filesep '*_*']);
 
 %% loop on subjects
-redo=1;
+redo=0;
 numBlocks=16;
 for nF=1:length(folders)
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*.eeg']);
