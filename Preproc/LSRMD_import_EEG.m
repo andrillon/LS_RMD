@@ -22,6 +22,14 @@ for nF=1:length(folders)
     these_names={files.name};
     files(find(~(cellfun(@isempty,regexp(these_names,'RS')))))=[];
     SubID=folders(nF).name;
+    if strcmp(SubID,'AA_15_04_14')
+        warning('Skipping AA_15_04_14... missing event information');
+        continue;
+    elseif strcmp(SubID,'AR_08_04_14') || strcmp(SubID,'LK_07_04_14') || strcmp(SubID,'MH_14_04_14') || strcmp(SubID,'OM_07_05_14') ...
+            || strcmp(SubID,'RM_06_05_14')
+        warning(sprintf('Skipping %s... unsupported headers',SubID));
+        continue;
+    end
     if length(files)~=numBlocks
         continue;
     end
