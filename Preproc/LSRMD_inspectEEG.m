@@ -9,7 +9,7 @@ addpath((path_fieldtrip));
 ft_defaults;
 
 %% choose and load subject
-List_Subj=dir([preproc_path filesep 'f_eblock_ft_*.mat']);
+List_Subj=dir([preproc_path filesep 'f_etrial_ft_*.mat']);
 ListNames={List_Subj.name};
 pick=listdlg('ListString',ListNames);
 load([preproc_path filesep ListNames{pick}])

@@ -10,30 +10,49 @@ ft_defaults;
 folders=dir([data_path filesep '*_*']);
 
 %% loop on subjects
+redo=1;
+numBlocks=16;
 for nF=1:length(folders)
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*.eeg']);
+    type_File=1;
+    if isempty(files)
+        files=dir([folders(nF).folder filesep folders(nF).name filesep '*.bdf']);
+        type_File=2;
+    end
     these_names={files.name};
-    files(find(~(cellfun(@isempty,regexp(these_names,'_')))))=[];
+    files(find(~(cellfun(@isempty,regexp(these_names,'RS')))))=[];
     SubID=folders(nF).name;
-    
+    if length(files)>numBlocks
+        continue;
+    end
     tic;
-    if exist([preproc_path filesep 'f_eblock_ft_' SubID '.mat'])==0
+    if redo==1 || exist([preproc_path filesep 'f_etrial_ft_' SubID '.mat'])==0
         %%% Loop on individual block files
         all_channels=[];
-        for k=1:length(files)
-            file_name = files(k).name;
-            file_folder = files(k).folder;
+        for k=1:numBlocks
+            if type_File==1
+                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*M' num2str(k) '.eeg']);
+            elseif type_File==2
+                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
+            end
+            file_name = this_file(1).name;
+            file_folder = this_file(1).folder;
             hdr=ft_read_header([file_folder filesep file_name]);
             if k==1
-                all_channels=hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG')))));
+                all_channels=hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG')) & ~cellfun(@isempty,regexp(hdr.chantype,'eeg')))));
             else
-                all_channels=intersect(all_channels,hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG'))))));
+                all_channels=intersect(all_channels,hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG')) & ~cellfun(@isempty,regexp(hdr.chantype,'eeg'))))));
             end
         end
         
-        for k=1:length(files)
-            file_name = files(k).name;
-            file_folder = files(k).folder;
+        for k=1:numBlocks
+            if type_File==1
+                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*M' num2str(k) '.eeg']);
+            elseif type_File==2
+                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
+            end
+            file_name = this_file(1).name;
+            file_folder = this_file(1).folder;
             FileID=file_name(1:end-4);
             fprintf('... working on subject %s (%g/%g) - file %s (%g/%g)\n',SubID,nF,length(folders),FileID,k,length(files))
             
@@ -42,11 +61,11 @@ for nF=1:length(folders)
             
             %%% Define epochs
             cfg=[];
-            cfg.trialfun            = 'LS_RMD_blockfun';
+            cfg.trialfun            = 'LS_RMD_trialfun';
             cfg.SubID               = SubID;
             cfg.dataset             = [file_folder filesep file_name];
-            cfg.trialdef.prestim    = 0.5;
-            cfg.trialdef.poststim   = 0.5;
+            cfg.trialdef.prestim    = 0.2;
+            cfg.trialdef.poststim   = 0.2;
             cfg = ft_definetrial(cfg);
             
             cfg.channel        = all_channels;
@@ -75,11 +94,11 @@ for nF=1:length(folders)
             if k==1
                 data=dat2;
             else
-                data.trial{k}=dat2.trial{1};
-                data.time{k}=dat2.time{1};
+                data.trial=[data.trial dat2.trial];
+                data.time=[data.time dat2.time];
             end
         end
-        save([preproc_path filesep 'f_eblock_ft_' SubID],'data','hdr');
+        save([preproc_path filesep 'f_etrial_ft_' SubID],'data','hdr');
     end
     toc;
 end
