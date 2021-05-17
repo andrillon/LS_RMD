@@ -70,7 +70,7 @@ for nF=1:length(files)
         cfg.method = 'runica'; % this is the default and uses the implementation from EEGLAB
         cfg.numcomponent = rankICA;
         comp = ft_componentanalysis(cfg, data);
-        save([data_path filesep 'Preproc' filesep 'ICf_etrial_ft_' file_name(1:end-4)],'data','comp','rankICA');
+        save([preproc_path filesep 'ICf_etrial_ft_' file_name(1:end-4)],'data','comp','rankICA');
         
     end
     toc;
