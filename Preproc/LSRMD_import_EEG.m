@@ -6,12 +6,12 @@ close all;
 run ../LS_RMD_localdef.m
 addpath((path_fieldtrip));
 ft_defaults;
+addpath(genpath(path_LSCPtools));
 
 folders=dir([data_path filesep '*_*']);
 
 %% loop on subjects
 redo=0;
-numBlocks=16;
 for nF=1:length(folders)
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*.eeg']);
     type_File=1;
@@ -31,11 +31,13 @@ for nF=1:length(folders)
         warning(sprintf('Skipping %s... unsupported headers',SubID));
         continue;
     end
-    if length(files)~=numBlocks
-        warning(sprintf('Skipping %s... wrong number of blocks (%g vs %g)',SubID,length(files),numBlocks));
-        continue;
-    end
-    fprintf('Processing %s...',SubID);
+%     if length(files)~=numBlocks
+%         warning(sprintf('Skipping %s... wrong number of blocks (%g vs %g)',SubID,length(files),numBlocks));
+%         continue;
+%     end
+  
+numBlocks=length(files);
+fprintf('Processing %s...',SubID);
     tic;
     if redo==1 || exist([preproc_path filesep 'f_etrial_ft_' SubID '.mat'])==0
         %%% Loop on individual block files
@@ -49,10 +51,14 @@ for nF=1:length(folders)
             elseif type_File==2
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
             end
+            if isempty(this_file)
+                continue;
+            end
+            
             file_name = this_file(1).name;
             file_folder = this_file(1).folder;
             hdr=ft_read_header([file_folder filesep file_name]);
-            if k==1
+            if isempty(all_channels)
                 all_channels=hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG')) & ~cellfun(@isempty,regexp(hdr.chantype,'eeg')))));
             else
                 all_channels=intersect(all_channels,hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG')) & ~cellfun(@isempty,regexp(hdr.chantype,'eeg'))))));
@@ -64,6 +70,9 @@ for nF=1:length(folders)
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*M' num2str(k) '.eeg']);
             elseif type_File==2
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
+            end
+            if isempty(this_file)
+                continue;
             end
             file_name = this_file(1).name;
             file_folder = this_file(1).folder;

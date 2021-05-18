@@ -7,6 +7,7 @@ run ../LS_RMD_localdef.m
 % adding relevant toolboxes to the path
 addpath((path_fieldtrip));
 ft_defaults;
+addpath(genpath(path_LSCPtools));
 
 %% choose and load subject
 List_Subj=dir([preproc_path filesep 'f_etrial_ft_*.mat']);
