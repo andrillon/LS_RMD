@@ -18,10 +18,14 @@ load([preproc_path filesep ListNames{pick}])
 mylabels=data.label;
 for nCh=1:length(mylabels)
     findspace=findstr(mylabels{nCh},' ');
-    if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
-        newlabels{nCh}=mylabels{nCh}(findspace+1:end);
+    if isempty(findspace)
+        newlabels{nCh}=mylabels{nCh};
     else
-        newlabels{nCh}=mylabels{nCh}(1:findspace-1);
+        if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
+            newlabels{nCh}=mylabels{nCh}(findspace+1:end);
+        else
+            newlabels{nCh}=mylabels{nCh}(1:findspace-1);
+        end
     end
 end
 
