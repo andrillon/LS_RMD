@@ -9,10 +9,17 @@ function trl = LS_RMD_blockfun(cfg)
 
 hdr=ft_read_header(cfg.dataset);
 evt=ft_read_event(cfg.dataset);
-evt_values={evt.value};
 evt_samples=[evt.sample];
-evt_values(find(cellfun(@isempty,evt_values)))={'void'};
-stim_idx=find_trials(evt_values,{'S'});
+try
+    evt_values={evt.value};
+    evt_values(find(cellfun(@isempty,evt_values)))={'void'};
+    stim_idx=find_trials(evt_values,{'S  5'});
+catch
+    evt_values={evt.value};
+    evt_values(find(cellfun(@isempty,evt_values)))={NaN};
+    evt_values=cell2mat(evt_values);
+    stim_idx=find(evt_values==5);
+end
 
 begsample     = evt_samples(stim_idx(1)) - cfg.trialdef.prestim*hdr.Fs;
 endsample     = evt_samples(stim_idx(end)) + cfg.trialdef.poststim*hdr.Fs - 1;
