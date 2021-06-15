@@ -15,7 +15,7 @@ load(['..' filesep 'LS_RMD_Bad_Components.mat']);
 
 
 %% loop on subjects
-redo=0;
+redo=1;
 for nF=1:length(folders)
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*.eeg']);
     type_File=1;
@@ -97,7 +97,7 @@ for nF=1:length(folders)
             cfg.SubID               = SubID;
             cfg.dataset             = [file_folder filesep file_name];
             cfg.trialdef.prestim    = 1;
-            cfg.trialdef.poststim   = 1;
+            cfg.trialdef.poststim   = 8;
             cfg = ft_definetrial(cfg);
             
             cfg.channel        = all_channels;

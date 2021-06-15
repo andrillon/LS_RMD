@@ -10,6 +10,13 @@ function trl = LS_RMD_trialfun(cfg)
 hdr=ft_read_header(cfg.dataset);
 evt=ft_read_event(cfg.dataset);
 evt_samples=[evt.sample];
+% Duration range: 3.06 to 7.29s
+% 101: Coherent Motion
+% 102: Coherent Motion
+% 103: Coherent Motion
+% 104: Coherent Motion
+% 105: Coherent Motion
+% 106: Coherent Motion
 try
     evt_values={evt.value};
     evt_values(find(cellfun(@isempty,evt_values)))={'void'};
