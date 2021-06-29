@@ -16,7 +16,7 @@ load(['..' filesep 'LS_RMD_Bad_Components.mat']);
 
 %% loop on subjects
 redo=1;
-for nF=60:length(folders)
+for nF=1:length(folders)
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*.eeg']);
     type_File=1;
     these_names={files.name};
@@ -39,10 +39,10 @@ for nF=60:length(folders)
     %         warning(sprintf('Skipping %s... wrong number of blocks (%g vs %g)',SubID,length(files),numBlocks));
     %         continue;
     %     end
-        if exist([preproc_path filesep 'ICf_etrial_ft_f_etrial_ft_' SubID '.mat'])==0
+    if exist([preproc_path filesep 'ICf_etrial_ft_f_etrial_ft_' SubID '.mat'])==0
         warning(sprintf('... missing %s ICA file\n',SubID));
         continue;
-        end
+    end
     
     numBlocks=length(files);
     fprintf('Processing %s...',SubID);
@@ -186,18 +186,18 @@ for nF=60:length(folders)
             [data] = ft_channelrepair(cfg, data);
         end
         
-%         %%% CSD
-%         elec=[];
-%         elec.label=layout.label;
-%         elec.pos=layout.pos;
-%         cfg=[];
-%         cfg.method       = 'spline';
-%         cfg.elec         = elec;
-%         cfg.order        = 4;
-%         cfg.degree       = 14;
-%         [data] = ft_scalpcurrentdensity(cfg, data);
-
-   cfg=[];
+        %         %%% CSD
+        %         elec=[];
+        %         elec.label=layout.label;
+        %         elec.pos=layout.pos;
+        %         cfg=[];
+        %         cfg.method       = 'spline';
+        %         cfg.elec         = elec;
+        %         cfg.order        = 4;
+        %         cfg.degree       = 14;
+        %         [data] = ft_scalpcurrentdensity(cfg, data);
+        
+        cfg=[];
         cfg.reref      = 'yes';
         cfg.refchannel = 'all';
         data = ft_preprocessing(cfg,data);
