@@ -62,7 +62,7 @@ for nF=1:length(files)
         end
     end
     fprintf('\n')
-    save([preproc_path filesep ',..' filesep 'SWdetection' filesep 'allSW_' SubID],'all_Waves')
+    save([preproc_path filesep '..' filesep 'SWdetection' filesep 'allSW_' SubID],'all_Waves')
     
     %%% clean detection
     paramSW.prticle_Thr=90; % 80 or 90 or 95
@@ -93,6 +93,6 @@ for nF=1:length(files)
         end
         slow_Waves=[slow_Waves ; thisE_Waves(temp_p2p>thr_Wave(nE),:)];
     end
-    save([preproc_path filesep ',..' filesep 'SWdetection' filesep 'SW_' SubID],'slow_Waves','paramSW')
+    save([preproc_path filesep '..' filesep 'SWdetection' filesep 'SW_' SubID],'slow_Waves','paramSW')
     
 end

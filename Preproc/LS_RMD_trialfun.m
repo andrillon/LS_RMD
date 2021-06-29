@@ -20,12 +20,12 @@ evt_samples=[evt.sample];
 try
     evt_values={evt.value};
     evt_values(find(cellfun(@isempty,evt_values)))={'void'};
-    stim_idx=find_trials(evt_values,{'S  5'});
+    stim_idx=find_trials(evt_values,{'S10.'});
 catch
     evt_values={evt.value};
     evt_values(find(cellfun(@isempty,evt_values)))={NaN};
     evt_values=cell2mat(evt_values);
-    stim_idx=find(evt_values==5);
+    stim_idx=find(ismember(evt_values,101:106));
 end
 trl=[];
 for k=1:length(stim_idx)-1

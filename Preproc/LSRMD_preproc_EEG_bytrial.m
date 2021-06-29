@@ -16,7 +16,7 @@ load(['..' filesep 'LS_RMD_Bad_Components.mat']);
 
 %% loop on subjects
 redo=1;
-for nF=1:length(folders)
+for nF=60:length(folders)
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*.eeg']);
     type_File=1;
     these_names={files.name};
@@ -96,9 +96,10 @@ for nF=1:length(folders)
             cfg.trialfun            = 'LS_RMD_trialfun';
             cfg.SubID               = SubID;
             cfg.dataset             = [file_folder filesep file_name];
-            cfg.trialdef.prestim    = 1;
-            cfg.trialdef.poststim   = 8;
+            cfg.trialdef.prestim    = 1.4;
+            cfg.trialdef.poststim   = 3.6;
             cfg = ft_definetrial(cfg);
+            cfg.trl(cfg.trl(:,2)>hdr.nSamples,:)=[];
             
             cfg.channel        = all_channels;
             cfg.demean         = 'yes';
@@ -137,11 +138,31 @@ for nF=1:length(folders)
         if isempty(thisF)
             continue;
         end
-        badChannels=[];
+        eval(['badChannels=[' LSRMDBadTrialsChannels.ExcludedChannels{thisF} '];']);
         eval(['badTrials=[' LSRMDBadTrialsChannels.ExcludedTrials{thisF} '];']);
         cfg=[];
         cfg.trials          = setdiff(1:length(data.trial),badTrials);
         data = ft_preprocessing(cfg, data);
+        
+        %%% Layout
+        mylabels=data.label;
+        for nCh=1:length(mylabels)
+            findspace=findstr(mylabels{nCh},' ');
+            if isempty(findspace)
+                newlabels{nCh}=mylabels{nCh};
+            else
+                if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
+                    newlabels{nCh}=mylabels{nCh}(findspace+1:end);
+                else
+                    newlabels{nCh}=mylabels{nCh}(1:findspace-1);
+                end
+            end
+        end
+        cfg = [];
+        cfg.layout = 'biosemi64.lay';
+        cfg.channel=newlabels;
+        cfg.center      = 'yes';
+        layout=ft_prepare_layout(cfg);
         
         if ~isempty(badChannels)
             fprintf('... ... interpolating %g channels\n',length(badChannels))
@@ -156,7 +177,7 @@ for nF=1:length(folders)
             % interpolate channels
             cfg=[];
             cfg.method         = 'weighted';
-            cfg.badchannel     = badChannels;
+            cfg.badchannel     = layout.label(badChannels);
             cfg.missingchannel = [];
             cfg.neighbours     = neighbours;
             cfg.trials         = 'all';
@@ -165,7 +186,18 @@ for nF=1:length(folders)
             [data] = ft_channelrepair(cfg, data);
         end
         
-        cfg=[];
+%         %%% CSD
+%         elec=[];
+%         elec.label=layout.label;
+%         elec.pos=layout.pos;
+%         cfg=[];
+%         cfg.method       = 'spline';
+%         cfg.elec         = elec;
+%         cfg.order        = 4;
+%         cfg.degree       = 14;
+%         [data] = ft_scalpcurrentdensity(cfg, data);
+
+   cfg=[];
         cfg.reref      = 'yes';
         cfg.refchannel = 'all';
         data = ft_preprocessing(cfg,data);

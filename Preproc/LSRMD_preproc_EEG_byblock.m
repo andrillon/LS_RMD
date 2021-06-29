@@ -15,8 +15,8 @@ load(['..' filesep 'LS_RMD_Bad_Components.mat']);
 
 
 %% loop on subjects
-redo=0;
-for nF=1:length(folders)
+redo=1;
+for nF=30:length(folders)
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*.eeg']);
     type_File=1;
     these_names={files.name};
@@ -132,12 +132,32 @@ for nF=1:length(folders)
         end
         
         
-        %%% take out trial
+        %%% interpolate channels
         thisF=match_str(LSRMDBadTrialsChannels.SubID,SubID);
         if isempty(thisF)
             continue;
         end
-        badChannels=[];
+        eval(['badChannels=[' LSRMDBadTrialsChannels.ExcludedChannels{thisF} '];']);
+        
+        %%% Layout
+        mylabels=data.label;
+        for nCh=1:length(mylabels)
+            findspace=findstr(mylabels{nCh},' ');
+            if isempty(findspace)
+                newlabels{nCh}=mylabels{nCh};
+            else
+                if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
+                    newlabels{nCh}=mylabels{nCh}(findspace+1:end);
+                else
+                    newlabels{nCh}=mylabels{nCh}(1:findspace-1);
+                end
+            end
+        end
+        cfg = [];
+        cfg.layout = 'biosemi64.lay';
+        cfg.channel=newlabels;
+        cfg.center      = 'yes';
+        layout=ft_prepare_layout(cfg);
         
         if ~isempty(badChannels)
             fprintf('... ... interpolating %g channels\n',length(badChannels))
@@ -152,7 +172,7 @@ for nF=1:length(folders)
             % interpolate channels
             cfg=[];
             cfg.method         = 'weighted';
-            cfg.badchannel     = badChannels;
+            cfg.badchannel     = layout.label(badChannels);
             cfg.missingchannel = [];
             cfg.neighbours     = neighbours;
             cfg.trials         = 'all';
