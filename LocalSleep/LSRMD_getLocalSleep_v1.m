@@ -37,7 +37,7 @@ for nF=1:length(files)
             end
         end
     end
-
+    
     all_Waves=[];
     for nBl=1:size(data.trial,2)
         temp_data=data.trial{nBl}(:,:);

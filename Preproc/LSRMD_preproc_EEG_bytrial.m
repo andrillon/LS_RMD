@@ -96,8 +96,8 @@ for nF=1:length(folders)
             cfg.trialfun            = 'LS_RMD_trialfun';
             cfg.SubID               = SubID;
             cfg.dataset             = [file_folder filesep file_name];
-            cfg.trialdef.prestim    = 1.4;
-            cfg.trialdef.poststim   = 3.6;
+            cfg.trialdef.prestim    = 0.7;
+            cfg.trialdef.poststim   = 1.8;
             cfg = ft_definetrial(cfg);
             cfg.trl(cfg.trl(:,2)>hdr.nSamples,:)=[];
             
@@ -219,14 +219,40 @@ for nF=1:length(folders)
         load([preproc_path filesep 'ICf_etrial_ft_f_etrial_ft_' SubID '.mat'],'comp');
         data = ft_rejectcomponent(cfg, comp, data);
         
-        cfg           = [];
-        cfg.toilim    = [-0.7 1.8];
-        [data] = ft_redefinetrial(cfg, data);
+%         cfg           = [];
+%         cfg.toilim    = [-0.7 1.8];
+%         [data] = ft_redefinetrial(cfg, data);
         
         cfg=[];
         cfg.demean          = 'yes';
         cfg.baselinewindow  = [-0.1 0];
         data = ft_preprocessing(cfg,data);
+        
+        %%%%%% Re-order channels
+        load(['..' filesep 'LS_RMD_Common_Electrodes.mat']);
+        % fix channel names
+        mylabels=data.label;
+        newchanidx=[];
+        newlabels=[];
+        for nCh=1:length(mylabels)
+            findspace=findstr(mylabels{nCh},' ');
+            if isempty(findspace)
+                newlabels{nCh}=mylabels{nCh};
+            else
+                if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
+                    newlabels{nCh}=mylabels{nCh}(findspace+1:end);
+                else
+                    newlabels{nCh}=mylabels{nCh}(1:findspace-1);
+                end
+            end
+        end
+        for  nCh=1:length(all_channels)
+            newchanidx(nCh)=find(ismember(newlabels,all_channels{nCh}));
+        end
+        for  nTr=1:length(data.trial)
+            data.trial{nTr}=data.trial{nTr}(newchanidx,:);
+        end
+        data.label=all_channels;
         
         save([preproc_path filesep 'ICAcleaned_etrial_ft_' SubID],'data','hdr');
         

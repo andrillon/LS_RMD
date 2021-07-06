@@ -206,9 +206,35 @@ for nF=1:length(folders)
         
         cfg=[];
         cfg.demean          = 'yes';
-        cfg.baselinewindow  = [-1 0];
+%         cfg.baselinewindow  = [-1 0];
         data = ft_preprocessing(cfg,data);
         
+ %%%%%% Re-order channels
+        load(['..' filesep 'LS_RMD_Common_Electrodes.mat']);
+        % fix channel names
+        mylabels=data.label;
+        newchanidx=[];
+        newlabels=[];
+        for nCh=1:length(mylabels)
+            findspace=findstr(mylabels{nCh},' ');
+            if isempty(findspace)
+                newlabels{nCh}=mylabels{nCh};
+            else
+                if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
+                    newlabels{nCh}=mylabels{nCh}(findspace+1:end);
+                else
+                    newlabels{nCh}=mylabels{nCh}(1:findspace-1);
+                end
+            end
+        end
+        for  nCh=1:length(all_channels)
+            newchanidx(nCh)=find(ismember(newlabels,all_channels{nCh}));
+        end
+        for  nTr=1:length(data.trial)
+            data.trial{nTr}=data.trial{nTr}(newchanidx,:);
+        end
+        data.label=all_channels;
+                
         save([preproc_path filesep 'ICAcleaned_eblock_ft_' SubID],'data');
         
     end
