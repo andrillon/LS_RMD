@@ -8,12 +8,14 @@ addpath((path_fieldtrip));
 ft_defaults;
 addpath(genpath(path_LSCPtools));
 
-folders=dir([data_path filesep '*_*']);
+folders=dir([data_path filesep]); % DP 19/07 removing _ to incorporate older data
+folders(1:2) = []; %DP 19/07 removing hidden folders - probably more elegant solution needed here!
 
 %% loop on subjects
 redo=0;
 for nF=1:length(folders)
-    files=dir([folders(nF).folder filesep folders(nF).name filesep '*.eeg']);
+    redo=0; %DP 19/07 adding so I can specify only older adults
+    files=dir([folders(nF).folder filesep folders(nF).name filesep '*M*.eeg']); % DP 19/07 adding M to distinguish from older adults
     type_File=1;
     these_names={files.name};
     files(find(~(cellfun(@isempty,regexp(these_names,'RS')))))=[];
@@ -21,7 +23,18 @@ for nF=1:length(folders)
     if isempty(files)
         files=dir([folders(nF).folder filesep folders(nF).name filesep '*.bdf']);
         type_File=2;
+        if isempty(files) %DP 19/07 adding Bryce older adult data
+            files=dir([folders(nF).folder filesep folders(nF).name filesep SubID '90*.eeg']);
+            type_File=3;
+            redo=0; %DP 19/07 adding so I can specify only older adults
+            if isempty(files) %DP 19/07 adding Megan older adult data
+                files=dir([folders(nF).folder filesep folders(nF).name filesep '*_*.eeg']);
+                type_File=4;
+                redo=0; %DP 19/07 adding so I can specify only older adults
+            end
+        end
     end
+    
     
     if strcmp(SubID,'AA_15_04_14')
         warning('Skipping AA_15_04_14... missing event information');
@@ -50,6 +63,10 @@ fprintf('Processing %s...',SubID);
                 %                 end
             elseif type_File==2
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
+            elseif type_File==3
+                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*90' num2str(k) '.eeg']); %DP 19/07 adding Bryce older adult data
+            elseif type_File==4
+                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.eeg']); %DP 19/07 adding Megan older adult data
             end
             if isempty(this_file)
                 continue;
@@ -70,6 +87,10 @@ fprintf('Processing %s...',SubID);
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*M' num2str(k) '.eeg']);
             elseif type_File==2
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
+            elseif type_File==3
+                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*90' num2str(k) '.eeg']); %DP 19/07 adding Bryce older adult data
+            elseif type_File==4
+                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.eeg']); %DP 19/07 adding Megan older adult data
             end
             if isempty(this_file)
                 continue;
