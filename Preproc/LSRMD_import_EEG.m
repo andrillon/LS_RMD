@@ -28,9 +28,14 @@ for nF=1:length(folders)
             type_File=3;
             redo=0; %DP 19/07 adding so I can specify only older adults
             if isempty(files) %DP 19/07 adding Megan older adult data
-                files=dir([folders(nF).folder filesep folders(nF).name filesep '*_*.eeg']);
+                files=dir([folders(nF).folder filesep folders(nF).name filesep 'HN9*_*.eeg']);
                 type_File=4;
                 redo=0; %DP 19/07 adding so I can specify only older adults
+                if isempty(files) %DP 28/07 adding Megan younger adult data
+                    files=dir([folders(nF).folder filesep folders(nF).name filesep 'HN8*_*.eeg']);
+                    type_File=5;
+                    redo=0; %DP 28/07 adding so I can specify only older adults
+                end
             end
         end
     end
@@ -65,8 +70,8 @@ fprintf('Processing %s...',SubID);
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
             elseif type_File==3
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*90' num2str(k) '.eeg']); %DP 19/07 adding Bryce older adult data
-            elseif type_File==4
-                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.eeg']); %DP 19/07 adding Megan older adult data
+            elseif type_File==4 | type_File==5
+                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.eeg']); %DP 28/07 adding Megan older adult + younger adult data
             end
             if isempty(this_file)
                 continue;
@@ -83,14 +88,17 @@ fprintf('Processing %s...',SubID);
         end
         
         for k=1:numBlocks
+            if SubID=='HN880' & k==1 % DP 29/07 - skipping block 1 - no events
+                continue
+            end
             if type_File==1
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*M' num2str(k) '.eeg']);
             elseif type_File==2
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
             elseif type_File==3
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*90' num2str(k) '.eeg']); %DP 19/07 adding Bryce older adult data
-            elseif type_File==4
-                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.eeg']); %DP 19/07 adding Megan older adult data
+            elseif type_File==4 | type_File==5
+                this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.eeg']); %DP 28/07 adding Megan older adult + younger adult data
             end
             if isempty(this_file)
                 continue;
@@ -135,7 +143,7 @@ fprintf('Processing %s...',SubID);
             cfgbs.detrend         = 'no';
             cfgbs.demean          = 'yes';
             dat2                  = ft_resampledata(cfgbs,dat); % read raw data
-            if k==1
+            if k==1 | SubID=='HN880' & k==2 % DP 29/07 - block 1 was skipped so treat k==2 as block 1
                 data=dat2;
             else
                 data.trial=[data.trial dat2.trial];
