@@ -15,7 +15,7 @@ load(['..' filesep 'LS_RMD_Bad_Components.mat']);
 
 
 %% loop on subjects
-redo=1;
+redo=0;
 for nF=1:length(folders)
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*.eeg']);
     type_File=1;

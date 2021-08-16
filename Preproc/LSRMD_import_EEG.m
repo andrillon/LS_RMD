@@ -20,6 +20,9 @@ for nF=1:length(folders)
     these_names={files.name};
     files(find(~(cellfun(@isempty,regexp(these_names,'RS')))))=[];
     SubID=folders(nF).name;
+%     if ~strcmp(SubID,'A117')
+%         continue; %trying to solve fixation break errors
+%     end
     if isempty(files)
         files=dir([folders(nF).folder filesep folders(nF).name filesep '*.bdf']);
         type_File=2;
@@ -110,7 +113,9 @@ fprintf('Processing %s...',SubID);
             cfg.dataset             = [file_folder filesep file_name];
             cfg.trialdef.prestim    = 0.2;
             cfg.trialdef.poststim   = 0.2;
+            cfg.type_File           = type_File;
             cfg = ft_definetrial(cfg);
+            trl=cfg.trl;
             
             cfg.channel        = all_channels;
             cfg.demean         = 'yes';
@@ -142,7 +147,7 @@ fprintf('Processing %s...',SubID);
                 data.time=[data.time dat2.time];
             end
         end
-        save([preproc_path filesep 'f_etrial_ft_' SubID],'data','hdr');
+        save([preproc_path filesep 'f_etrial_ft_' SubID],'data','hdr','trl');
     end
     toc;
 end
