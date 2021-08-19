@@ -98,6 +98,8 @@ for nF=1:length(folders)
             cfg.dataset             = [file_folder filesep file_name];
             cfg.trialdef.prestim    = 0.7;
             cfg.trialdef.poststim   = 1.8;
+            cfg.behav               = [];
+            cfg.type_File           = type_File;
             cfg = ft_definetrial(cfg);
             cfg.trl(cfg.trl(:,2)>hdr.nSamples,:)=[];
             

@@ -12,15 +12,15 @@ folders=dir([data_path filesep]); % DP 19/07 removing _ to incorporate older dat
 folders(1:2) = []; %DP 19/07 removing hidden folders - probably more elegant solution needed here!
 
 %% loop on subjects
-redo=0;
+redo=1 ;
 for nF=1:length(folders)
-    redo=0; %DP 19/07 adding so I can specify only older adults
+%     redo=0; %DP 19/07 adding so I can specify only older adults
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*M*.eeg']); % DP 19/07 adding M to distinguish from older adults
     type_File=1;
     these_names={files.name};
     files(find(~(cellfun(@isempty,regexp(these_names,'RS')))))=[];
     SubID=folders(nF).name;
-%     if ~strcmp(SubID,'A117')
+%     if ~strcmp(SubID(1),'A')
 %         continue; %trying to solve fixation break errors
 %     end
     if isempty(files)
@@ -29,15 +29,16 @@ for nF=1:length(folders)
         if isempty(files) %DP 19/07 adding Bryce older adult data
             files=dir([folders(nF).folder filesep folders(nF).name filesep SubID '90*.eeg']);
             type_File=3;
-            redo=0; %DP 19/07 adding so I can specify only older adults
+            
+%             redo=0; %DP 19/07 adding so I can specify only older adults
             if isempty(files) %DP 19/07 adding Megan older adult data
                 files=dir([folders(nF).folder filesep folders(nF).name filesep 'HN9*_*.eeg']);
                 type_File=4;
-                redo=0; %DP 19/07 adding so I can specify only older adults
+%                 redo=0; %DP 19/07 adding so I can specify only older adults
                 if isempty(files) %DP 28/07 adding Megan younger adult data
                     files=dir([folders(nF).folder filesep folders(nF).name filesep 'HN8*_*.eeg']);
                     type_File=5;
-                    redo=0; %DP 28/07 adding so I can specify only older adults
+%                     redo=0; %DP 28/07 adding so I can specify only older adults
                 end
             end
         end
@@ -73,7 +74,7 @@ fprintf('Processing %s...',SubID);
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
             elseif type_File==3
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*90' num2str(k) '.eeg']); %DP 19/07 adding Bryce older adult data
-            elseif type_File==4 | type_File==5
+            elseif type_File==4 || type_File==5
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.eeg']); %DP 28/07 adding Megan older adult + younger adult data
             end
             if isempty(this_file)
@@ -91,7 +92,7 @@ fprintf('Processing %s...',SubID);
         end
         
         for k=1:numBlocks
-            if SubID=='HN880' & k==1 % DP 29/07 - skipping block 1 - no events
+            if strcmp(SubID,'HN880') && k==1 % DP 29/07 - skipping block 1 - no events
                 continue
             end
             if type_File==1
@@ -100,7 +101,8 @@ fprintf('Processing %s...',SubID);
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
             elseif type_File==3
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*90' num2str(k) '.eeg']); %DP 19/07 adding Bryce older adult data
-            elseif type_File==4 | type_File==5
+                behavfiles=dir([folders(nF).folder filesep '..' filesep 'Behav' filesep SubID '90'  num2str(k) '.mat']);
+            elseif type_File==4 || type_File==5
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.eeg']); %DP 28/07 adding Megan older adult + younger adult data
             end
             if isempty(this_file)
@@ -114,10 +116,18 @@ fprintf('Processing %s...',SubID);
             %%% Read headers
             hdr=ft_read_header([file_folder filesep file_name]);
             
+            %%% Load behaviour data if relevant
+            if exist('behavfiles')~=0 && ~isempty(behavfiles)
+               behav_data=load([behavfiles.folder filesep behavfiles.name]);
+            else
+                behav_data=[];
+            end
+            
             %%% Define epochs
             cfg=[];
             cfg.trialfun            = 'LS_RMD_trialfun';
             cfg.SubID               = SubID;
+            cfg.behav               = behav_data;
             cfg.dataset             = [file_folder filesep file_name];
             cfg.trialdef.prestim    = 0.2;
             cfg.trialdef.poststim   = 0.2;
@@ -148,7 +158,7 @@ fprintf('Processing %s...',SubID);
             cfgbs.detrend         = 'no';
             cfgbs.demean          = 'yes';
             dat2                  = ft_resampledata(cfgbs,dat); % read raw data
-            if k==1 | SubID=='HN880' & k==2 % DP 29/07 - block 1 was skipped so treat k==2 as block 1
+            if k==1 || strcmp(SubID,'HN880') && k==2 % DP 29/07 - block 1 was skipped so treat k==2 as block 1
                 data=dat2;
             else
                 data.trial=[data.trial dat2.trial];

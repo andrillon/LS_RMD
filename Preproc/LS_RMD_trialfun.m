@@ -34,9 +34,9 @@ try
             find_stim_idx=stim_idx(find(stim_idx<thisbrk_idx));
             if ~isempty(find_stim_idx)
                 find_stim_idx=find_stim_idx(end);
-            stim_idx(stim_idx==find_stim_idx)=[];
-                 end
-   end
+                stim_idx(stim_idx==find_stim_idx)=[];
+            end
+        end
     end
 catch
     strformat=0;
@@ -58,6 +58,55 @@ catch
      end
     end
 end
+
+%%% realign with behavioural data
+if ~isempty(cfg.behav)
+    behav_data=cfg.behav;
+    step=1;
+    start=1;
+    getrid=zeros(1,length(stim_idx));
+    if strformat
+        thiscond=evt_values(stim_idx(start));
+        thiscond=str2num(thiscond{1}(3:end));
+    else
+        thiscond=evt_values(stim_idx(start))-100;
+    end
+    while thiscond~=behav_data.trialCond(step)
+        getrid(start)=1;
+        start=start+1;
+        if strformat
+            thiscond=evt_values(stim_idx(start));
+            thiscond=str2num(thiscond{1}(3:end));
+        else
+            thiscond=evt_values(stim_idx(start))-100;
+        end
+    end
+    step=step+1;
+    
+    k=start+1;
+    while k<length(stim_idx)
+        if strformat
+            thiscond=evt_values(stim_idx(k));
+            thiscond=str2num(thiscond{1}(3:end));
+        else
+            thiscond=evt_values(stim_idx(k))-100;
+        end
+        while thiscond~=behav_data.trialCond(step) && k<length(stim_idx)
+            getrid(k)=1;
+            k=k+1;
+            if strformat
+            thiscond=evt_values(stim_idx(k));
+            thiscond=str2num(thiscond{1}(3:end));
+        else
+            thiscond=evt_values(stim_idx(k))-100;
+        end
+        end
+        k=k+1;
+        step=step+1;
+    end
+    stim_idx(getrid==1)=[];
+end
+
 
 %%% find trial condition
 % For the first cohort of younger adults (for reference, these are denoted as type_File=1:2 in the import_EEG script) the following applies for coherent motion triggers:
@@ -120,5 +169,5 @@ for k=1:length(stim_idx)-1
     begsample     = evt_samples(stim_idx(k)) - cfg.trialdef.prestim*hdr.Fs;
     endsample     = evt_samples(stim_idx(k+1)) + cfg.trialdef.poststim*hdr.Fs - 1;
     offset        = -cfg.trialdef.prestim*hdr.Fs;
-    trl = [trl ; [round([begsample endsample offset stim_cond(k) stim_rt(k)])]];
+    trl = [trl ; [round([begsample endsample offset]) stim_cond(k) stim_rt(k)]];
 end
