@@ -20,9 +20,9 @@ for nF=1:length(folders)
     these_names={files.name};
     files(find(~(cellfun(@isempty,regexp(these_names,'RS')))))=[];
     SubID=folders(nF).name;
-    if ~strcmp(SubID(1),'A')
-        continue; %trying to solve fixation break errors
-    end
+%     if ~strcmp(SubID(1),'A')
+%         continue; %trying to solve fixation break errors
+%     end
 %     if strcmp(SubID,'A107') || strcmp(SubID,'A108') || strcmp(SubID,'A109') || strcmp(SubID,'A111')
 %         warning('SKIPPING (problem with events)')
 %         continue; %trying to solve fixation break errors
