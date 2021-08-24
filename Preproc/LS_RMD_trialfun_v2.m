@@ -1,4 +1,5 @@
-function trl = LS_RMD_trialfun(cfg)
+function trl = LS_RMD_trialfun_v2(cfg)
+trl=[];
 
 % this function requires the following fields to be specified
 % cfg.dataset
@@ -62,6 +63,16 @@ end
 %%% realign with behavioural data
 if ~isempty(cfg.behav)
     behav_data=cfg.behav;
+    realigned_trials=[];
+    PTBtrig=cfg.behav.PTBtrig(cfg.behav.PTBtrig~=5)-100;
+    if length(PTBtrig)==length(behav_data.trialCond) && sum(PTBtrig==behav_data.trialCond)==length(behav_data.trialCond)
+        PTBtimes=cfg.behav.PTBtrigT(cfg.behav.PTBtrig~=5)-100;
+    else
+        warning('PTB times do not match condition');
+        return;
+    end
+    EVTtimes=evt_samples(stim_idx);
+    
     step=1;
     start=1;
     getrid=zeros(1,length(stim_idx));
@@ -81,33 +92,33 @@ if ~isempty(cfg.behav)
             thiscond=evt_values(stim_idx(start))-100;
         end
     end
-    step=step+1;
+    timeOri_EVT=evt_samples(stim_idx(start));
+    timeOri_PTB=PTBtimes(step);
+    realigned_trials=[step stim_idx(start) 0 0 0 thiscond];
     
-    k=start+1;
-    while k<length(stim_idx) && step<length(behav_data.trialCond)
+    EVTtimes=(EVTtimes-timeOri_EVT)/hdr.Fs;
+    PTBtimes=PTBtimes-timeOri_PTB;
+    
+    for k=2:length(PTBtimes) 
+        thiscond=behav_data.trialCond(k);
         if strformat
-            thiscond=evt_values(stim_idx(k));
-            thiscond=str2num(thiscond{1}(3:end));
+            these_stimidx=find(ismember(evt_values(stim_idx),['S' num2str(thiscond+100)]));
         else
-            thiscond=evt_values(stim_idx(k))-100;
+            these_stimidx=find(ismember(evt_values(stim_idx),(thiscond+100)));
         end
-        while thiscond~=behav_data.trialCond(step) && k<length(stim_idx) && step<length(behav_data.trialCond)
-            getrid(k)=1;
-            k=k+1;
-            if strformat
-            thiscond=evt_values(stim_idx(k));
-            thiscond=str2num(thiscond{1}(3:end));
+        if ~isempty(these_stimidx)
+        [closesttime, closestindex]=findclosest(EVTtimes(these_stimidx),PTBtimes(k));
+        realigned_trials(k,:)=[k stim_idx(these_stimidx(closestindex)) PTBtimes(k) closesttime PTBtimes(k)-closesttime thiscond];
         else
-            thiscond=evt_values(stim_idx(k))-100;
+            realigned_trials(k,:)=[k NaN PTBtimes(k) NaN +Inf thiscond];
         end
-        end
-        k=k+1;
-        step=step+1;
     end
-    stim_idx(getrid==1)=[];
     
-    PTBtrig=cfg.behav.PTBtrig(cfg.behav.PTBtrig~=5);
-    if sum(PTBtrig==thiscond)
+    clean_realigned_trials=realigned_trials(abs(realigned_trials(:,5))<0.1,:);
+    
+    stim_idx=clean_realigned_trials(:,2);
+    
+    fprintf('... ... realigned %g out of %g trials with a mean absolute jitter of %1.5f s\n',length(stim_idx),size(realigned_trials,1),mean(abs(clean_realigned_trials(:,5))));
 end
 
 
@@ -167,10 +178,14 @@ for rsp=1:length(resp_sample)
     end
 end
 
-trl=[];
 for k=1:length(stim_idx)-1
     begsample     = evt_samples(stim_idx(k)) - cfg.trialdef.prestim*hdr.Fs;
     endsample     = evt_samples(stim_idx(k+1)) + cfg.trialdef.poststim*hdr.Fs - 1;
     offset        = -cfg.trialdef.prestim*hdr.Fs;
     trl = [trl ; [round([begsample endsample offset]) stim_cond(k) stim_rt(k)]];
 end
+k=length(stim_idx);
+begsample     = evt_samples(stim_idx(k)) - cfg.trialdef.prestim*hdr.Fs;
+endsample     = hdr.nSamples;
+offset        = -cfg.trialdef.prestim*hdr.Fs;
+trl = [trl ; [round([begsample endsample offset]) stim_cond(k) stim_rt(k)]];

@@ -12,7 +12,7 @@ folders=dir([data_path filesep]); % DP 19/07 removing _ to incorporate older dat
 folders(1:2) = []; %DP 19/07 removing hidden folders - probably more elegant solution needed here!
 
 %% loop on subjects
-redo=1 ;
+redo=1;
 for nF=1:length(folders)
 %     redo=0; %DP 19/07 adding so I can specify only older adults
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*M*.eeg']); % DP 19/07 adding M to distinguish from older adults
@@ -20,7 +20,11 @@ for nF=1:length(folders)
     these_names={files.name};
     files(find(~(cellfun(@isempty,regexp(these_names,'RS')))))=[];
     SubID=folders(nF).name;
-%     if ~strcmp(SubID(1),'A')
+    if ~strcmp(SubID(1),'A')
+        continue; %trying to solve fixation break errors
+    end
+%     if strcmp(SubID,'A107') || strcmp(SubID,'A108') || strcmp(SubID,'A109') || strcmp(SubID,'A111')
+%         warning('SKIPPING (problem with events)')
 %         continue; %trying to solve fixation break errors
 %     end
     if isempty(files)
@@ -125,14 +129,19 @@ fprintf('Processing %s...',SubID);
             
             %%% Define epochs
             cfg=[];
-            cfg.trialfun            = 'LS_RMD_trialfun';
+            cfg.trialfun            = 'LS_RMD_trialfun_v2';
             cfg.SubID               = SubID;
             cfg.behav               = behav_data;
             cfg.dataset             = [file_folder filesep file_name];
-            cfg.trialdef.prestim    = 0.2;
+            cfg.trialdef.prestim    = 0.5;
             cfg.trialdef.poststim   = 0.2;
             cfg.type_File           = type_File;
+            try
             cfg = ft_definetrial(cfg);
+            catch
+                warning('problem with trial definition');
+                continue;
+            end
             trl=cfg.trl;
             
             cfg.channel        = all_channels;
