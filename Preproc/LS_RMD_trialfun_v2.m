@@ -67,6 +67,15 @@ if ~isempty(cfg.behav)
     PTBtrig=cfg.behav.PTBtrig(cfg.behav.PTBtrig~=5)-100;
     if length(PTBtrig)==length(behav_data.trialCond) && sum(PTBtrig==behav_data.trialCond)==length(behav_data.trialCond)
         PTBtimes=cfg.behav.PTBtrigT(cfg.behav.PTBtrig~=5)-100;
+    elseif length(behav_data.trialCond)==length(PTBtrig)-1
+        PTBtrig(end)=[];
+        if sum(PTBtrig==behav_data.trialCond)==length(behav_data.trialCond)
+            PTBtimes=cfg.behav.PTBtrigT(cfg.behav.PTBtrig~=5)-100;
+            PTBtimes(end)=[];
+        else
+            warning('PTB times do not match condition');
+            return;
+        end
     else
         warning('PTB times do not match condition');
         return;
@@ -107,8 +116,8 @@ if ~isempty(cfg.behav)
             these_stimidx=find(ismember(evt_values(stim_idx),(thiscond+100)));
         end
         if ~isempty(these_stimidx)
-        [closesttime, closestindex]=findclosest(EVTtimes(these_stimidx),PTBtimes(k));
-        realigned_trials(k,:)=[k stim_idx(these_stimidx(closestindex)) PTBtimes(k) closesttime PTBtimes(k)-closesttime thiscond];
+            [closesttime, closestindex]=findclosest(EVTtimes(these_stimidx),PTBtimes(k));
+            realigned_trials(k,:)=[k stim_idx(these_stimidx(closestindex)) PTBtimes(k) closesttime PTBtimes(k)-closesttime thiscond];
         else
             realigned_trials(k,:)=[k NaN PTBtimes(k) NaN +Inf thiscond];
         end
@@ -189,3 +198,5 @@ begsample     = evt_samples(stim_idx(k)) - cfg.trialdef.prestim*hdr.Fs;
 endsample     = hdr.nSamples;
 offset        = -cfg.trialdef.prestim*hdr.Fs;
 trl = [trl ; [round([begsample endsample offset]) stim_cond(k) stim_rt(k)]];
+
+trl=[trl abs(clean_realigned_trials(:,5))];
