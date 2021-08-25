@@ -134,7 +134,8 @@ fprintf('Processing %s...',SubID);
                behav_data=load([behavfiles.folder filesep behavfiles.name]);
             else
                 behav_data=[];
-            end
+                warning('cannot find the behavioural data!!');
+ end
             
             %%% Define epochs
             cfg=[];
