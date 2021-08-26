@@ -27,14 +27,15 @@ try
     possible_values={'S101','S102','S103','S104','S105','S106','S107','S108','S109','S110',...
         'S111','S112'};
     stim_idx=find(ismember(evt_values,possible_values));
+    all_breaks=[];
     if ~isempty(find_trials(evt_values,{'S 28'}))
         %%% discard trials just before a 28
         fixbreaks_idx=find_trials(evt_values,{'S 28'});
         for brks=length(fixbreaks_idx):-1:1
             thisbrk_idx=fixbreaks_idx(brks);
-            find_stim_idx=stim_idx(find(stim_idx<thisbrk_idx));
+            find_stim_idx=stim_idx(find(stim_idx==thisbrk_idx-1));
             if ~isempty(find_stim_idx)
-                find_stim_idx=find_stim_idx(end);
+                all_breaks=[all_breaks find(stim_idx==find_stim_idx)];
                 stim_idx(stim_idx==find_stim_idx)=[];
             end
         end
@@ -65,12 +66,15 @@ if ~isempty(cfg.behav)
     behav_data=cfg.behav;
     realigned_trials=[];
     PTBtrig=cfg.behav.PTBtrig(cfg.behav.PTBtrig~=5)-100;
+    PTBtrig(all_breaks)=[];
     if length(PTBtrig)==length(behav_data.trialCond) && sum(PTBtrig==behav_data.trialCond)==length(behav_data.trialCond)
         PTBtimes=cfg.behav.PTBtrigT(cfg.behav.PTBtrig~=5)-100;
-    elseif length(behav_data.trialCond)==length(PTBtrig)-1
+        PTBtimes(all_breaks)=[];
+    elseif length(behav_data.trialCond)==length(PTBtrig)-1 && PTBtrig(1)==PTBtrig(end)
         PTBtrig(end)=[];
         if sum(PTBtrig==behav_data.trialCond)==length(behav_data.trialCond)
             PTBtimes=cfg.behav.PTBtrigT(cfg.behav.PTBtrig~=5)-100;
+        PTBtimes(all_breaks)=[];
             PTBtimes(end)=[];
         else
             warning('PTB times do not match condition');
