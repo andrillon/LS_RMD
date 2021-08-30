@@ -21,7 +21,7 @@ for nF=1:length(folders)
     these_names={files.name};
     files(find(~(cellfun(@isempty,regexp(these_names,'RS')))))=[];
     SubID=folders(nF).name;
-%     if ~strcmp(SubID(1),'A')
+%     if ismember(SubID,{'A103','A104','A105','A106','A107','A108','A109'})
 %         continue; %trying to solve fixation break errors
 %     end
 %     if strcmp(SubID,'A107') || strcmp(SubID,'A108') || strcmp(SubID,'A109') || strcmp(SubID,'A111')
@@ -149,8 +149,10 @@ fprintf('Processing %s...',SubID);
             try
                 cfg = ft_definetrial(cfg);
             catch
+                cfg.trl=[]; trl=[];
                 warning('problem with trial definition (no trial defined)');
-                continue;
+                      all_trl=[all_trl ; [nF k 0 nan(1,2)]];
+      continue;
             end
             trl=cfg.trl;
 %             if isempty(trl)

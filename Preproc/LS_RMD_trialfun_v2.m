@@ -33,10 +33,14 @@ try
         fixbreaks_idx=find_trials(evt_values,{'S 28'});
         for brks=length(fixbreaks_idx):-1:1
             thisbrk_idx=fixbreaks_idx(brks);
-            find_stim_idx=stim_idx(find(stim_idx==thisbrk_idx-1));
+            find_stim_idx=stim_idx(find(stim_idx<thisbrk_idx));
             if ~isempty(find_stim_idx)
-                all_breaks=[all_breaks find(stim_idx==find_stim_idx)];
-                stim_idx(stim_idx==find_stim_idx)=[];
+                find_stim_idx=find_stim_idx(end);
+                if ~isempty(find(ismember(evt_values(find_stim_idx:thisbrk_idx),{'S  4','S  5','S 12'})))
+                else
+                    all_breaks=[all_breaks find(stim_idx==find_stim_idx)];
+                    stim_idx(stim_idx==find_stim_idx)=[];
+                end
             end
         end
     end
@@ -47,6 +51,7 @@ catch
     evt_values=cell2mat(evt_values);
     possible_values=101:112;
     stim_idx=find(ismember(evt_values,possible_values));
+    all_breaks=[];
     if ~isempty(find(ismember(evt_values,28)))
         %%% discard trials just before a 28
         fixbreaks_idx=find(ismember(evt_values,28));
@@ -55,9 +60,13 @@ catch
             find_stim_idx=stim_idx(find(stim_idx<thisbrk_idx));
             if ~isempty(find_stim_idx)
                 find_stim_idx=find_stim_idx(end);
-            stim_idx(stim_idx==find_stim_idx)=[];
-               end
-     end
+                if ~isempty(find(ismember(evt_values(find_stim_idx:thisbrk_idx),[4 5 12])))
+                else
+                    all_breaks=[all_breaks find(stim_idx==find_stim_idx)];
+                    stim_idx(stim_idx==find_stim_idx)=[];
+                end
+            end
+        end
     end
 end
 
@@ -66,22 +75,39 @@ if ~isempty(cfg.behav)
     behav_data=cfg.behav;
     realigned_trials=[];
     PTBtrig=cfg.behav.PTBtrig(cfg.behav.PTBtrig~=5)-100;
+    if max(all_breaks)>length(PTBtrig)
+        %                     warning(sprintf('PTB times do not match condition (%g vs %g)',length(PTBtrig),length(behav_data.trialCond)));
+        %             return;
+        all_breaks(all_breaks>length(PTBtrig))=[];
+    end
     PTBtrig(all_breaks)=[];
     if length(PTBtrig)==length(behav_data.trialCond) && sum(PTBtrig==behav_data.trialCond)==length(behav_data.trialCond)
         PTBtimes=cfg.behav.PTBtrigT(cfg.behav.PTBtrig~=5)-100;
         PTBtimes(all_breaks)=[];
-    elseif length(behav_data.trialCond)==length(PTBtrig)-1 && PTBtrig(1)==PTBtrig(end)
+    elseif length(behav_data.trialCond)-1==length(PTBtrig)
+        trialCond=behav_data.trialCond;
+        sumcheck=[];
+        for m=1:length(trialCond)
+            sumcheck(m)=sum(PTBtrig==trialCond(setdiff(1:length(trialCond),m)))==length(trialCond(setdiff(1:length(trialCond),m)));
+        end
+        suppressed_trial=find(sumcheck);
+        if length(suppressed_trial)==1
+            behav_data.trialCond(suppressed_trial)=[];
+        end
+        PTBtimes=cfg.behav.PTBtrigT(cfg.behav.PTBtrig~=5)-100;
+        PTBtimes(all_breaks)=[];
+    elseif length(behav_data.trialCond)==length(PTBtrig)-1     && PTBtrig(1)==PTBtrig(end)
         PTBtrig(end)=[];
         if sum(PTBtrig==behav_data.trialCond)==length(behav_data.trialCond)
             PTBtimes=cfg.behav.PTBtrigT(cfg.behav.PTBtrig~=5)-100;
-        PTBtimes(all_breaks)=[];
+            PTBtimes(all_breaks)=[];
             PTBtimes(end)=[];
         else
-            warning('PTB times do not match condition');
+            warning(sprintf('PTB times do not match condition (%g vs %g)',length(PTBtrig),length(behav_data.trialCond)));
             return;
         end
     else
-        warning('PTB times do not match condition');
+        warning(sprintf('PTB times do not match condition (%g vs %g)',length(PTBtrig),length(behav_data.trialCond)));
         return;
     end
     EVTtimes=evt_samples(stim_idx);
@@ -112,7 +138,7 @@ if ~isempty(cfg.behav)
     EVTtimes=(EVTtimes-timeOri_EVT)/hdr.Fs;
     PTBtimes=PTBtimes-timeOri_PTB;
     
-    for k=2:length(PTBtimes) 
+    for k=2:length(PTBtimes)
         thiscond=behav_data.trialCond(k);
         if strformat
             these_stimidx=find(ismember(evt_values(stim_idx),['S' num2str(thiscond+100)]));
@@ -153,16 +179,16 @@ if ismember(cfg.type_File,3:5)
         right_targets=[103 104 107 108 111 112];
     end
 elseif ismember(cfg.type_File,1:2)
-        if strformat
+    if strformat
         left_targets={'S101','S103','S105'};
         right_targets={'S102','S104','S106'};
     else
         left_targets=[101 103 105];
         right_targets=[102 104 106];
-        end
+    end
 else
     left_targets=[];
-        right_targets=[];
+    right_targets=[];
     warning('unexpected number of evt values');
 end
 stim_cond=nan(1,length(stim_idx));
