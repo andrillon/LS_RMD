@@ -74,6 +74,7 @@ end
 if ~isempty(cfg.behav)
     behav_data=cfg.behav;
     realigned_trials=[];
+    clean_realigned_trials=[];
     PTBtrig=cfg.behav.PTBtrig(cfg.behav.PTBtrig~=5)-100;
     if max(all_breaks)>length(PTBtrig)
         %                     warning(sprintf('PTB times do not match condition (%g vs %g)',length(PTBtrig),length(behav_data.trialCond)));
