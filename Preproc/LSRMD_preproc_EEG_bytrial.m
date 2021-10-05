@@ -83,11 +83,28 @@ for nF=1:length(folders)
             if isempty(this_file)
                 continue;
             end
+            if type_File==1
+                behavfiles=dir([folders(nF).folder filesep folders(nF).name filesep this_file.name(1:end-4) '.mat']);
+            elseif type_File==2
+                behavfiles=dir([folders(nF).folder filesep folders(nF).name filesep this_file.name(1:end-4) '.mat']);
+            elseif type_File==3
+                behavfiles=dir([folders(nF).folder filesep '..' filesep 'Behav' filesep SubID '90'  num2str(k) '.mat']);
+            elseif type_File==4 || type_File==5
+                behavfiles=dir([folders(nF).folder filesep folders(nF).name filesep this_file.name(1:end-4) '.mat']); %DP 28/07 adding Megan older adult + younger adult data
+            end
+            
             file_name = this_file(1).name;
             file_folder = this_file(1).folder;
             FileID=file_name(1:end-4);
             fprintf('... working on subject %s (%g/%g) - file %s (%g/%g)\n',SubID,nF,length(folders),FileID,k,length(files))
             
+             if exist('behavfiles')~=0 && ~isempty(behavfiles)
+               behav_data=load([behavfiles.folder filesep behavfiles.name]);
+            else
+                behav_data=[];
+                warning('cannot find the behavioural data!!');
+             end
+ 
             %%% Read headers
             hdr=ft_read_header([file_folder filesep file_name]);
             
@@ -98,7 +115,7 @@ for nF=1:length(folders)
             cfg.dataset             = [file_folder filesep file_name];
             cfg.trialdef.prestim    = 0.7;
             cfg.trialdef.poststim   = 1.8;
-            cfg.behav               = [];
+            cfg.behav               = behav_data;
             cfg.type_File           = type_File;
             cfg = ft_definetrial(cfg);
             cfg.trl(cfg.trl(:,2)>hdr.nSamples,:)=[];
