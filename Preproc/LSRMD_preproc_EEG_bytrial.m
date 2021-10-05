@@ -110,7 +110,7 @@ for nF=1:length(folders)
             
             %%% Define epochs
             cfg=[];
-            cfg.trialfun            = 'LS_RMD_trialfun';
+            cfg.trialfun            = 'LS_RMD_trialfun_v2';
             cfg.SubID               = SubID;
             cfg.dataset             = [file_folder filesep file_name];
             cfg.trialdef.prestim    = 0.7;
