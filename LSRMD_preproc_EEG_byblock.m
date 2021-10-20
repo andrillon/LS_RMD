@@ -60,12 +60,15 @@ for nF=1:length(folders)
     numBlocks=length(files);
     fprintf('Processing %s...',SubID);
     tic;
-    if redo==1 || exist([preproc_path filesep 'ICAcleaned_etrial_ft_' SubID '.mat'])==0
+    if redo==1 || exist([preproc_path filesep 'ICAcleaned_eblock_ft_' SubID '.mat'])==0
         %%% Loop on individual block files
         all_channels=[];
         for k=1:numBlocks
             if type_File==1
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*M' num2str(k) '.eeg']);
+                %                 if isempty(this_file)
+                %                     this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.eeg']);
+                %                 end
             elseif type_File==2
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*_' num2str(k) '.bdf']);
             elseif type_File==3
@@ -76,6 +79,7 @@ for nF=1:length(folders)
             if isempty(this_file)
                 continue;
             end
+            
             
             file_name = this_file(1).name;
             file_folder = this_file(1).folder;
@@ -88,8 +92,6 @@ for nF=1:length(folders)
         end
         
         % Epoch by trial
-        data=[];
-        all_trl=[];
         for k=1:numBlocks
             if type_File==1
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*M' num2str(k) '.eeg']);
@@ -118,41 +120,24 @@ for nF=1:length(folders)
             FileID=file_name(1:end-4);
             fprintf('... working on subject %s (%g/%g) - file %s (%g/%g)\n',SubID,nF,length(folders),FileID,k,length(files))
             
-             if exist('behavfiles')~=0 && ~isempty(behavfiles)
+            if exist('behavfiles')~=0 && ~isempty(behavfiles)
                behav_data=load([behavfiles.folder filesep behavfiles.name]);
             else
                 behav_data=[];
                 warning('cannot find the behavioural data!!');
-             end
- 
+            end
+            
             %%% Read headers
             hdr=ft_read_header([file_folder filesep file_name]);
             
             %%% Define epochs
             cfg=[];
-            cfg.trialfun            = 'LS_RMD_trialfun_v2';
+            cfg.trialfun            = 'LS_RMD_blockfun';
             cfg.SubID               = SubID;
             cfg.dataset             = [file_folder filesep file_name];
-            cfg.trialdef.prestim    = 0.7;
-            cfg.trialdef.poststim   = 1.8;
-            cfg.behav               = behav_data;
-            cfg.type_File           = type_File;
-%             cfg = ft_definetrial(cfg);
-%             cfg.trl(cfg.trl(:,2)>hdr.nSamples,:)=[];
-            try
-                cfg = ft_definetrial(cfg);
-            catch
-                cfg.trl=[]; trl=[];
-                warning('problem with trial definition (no trial defined)');
-                all_trl=[all_trl ; [nF k 0 nan(1,2)]];
-                continue;
-            end
-            trl=cfg.trl;
-            all_trl=[all_trl ; [nF k size(trl,1) mean(trl(:,5:6),1)]];
-            if size(trl,1)<10
-                warning('problem with trial definition (less than 10 trials defined)');
-                continue;
-            end
+            cfg.trialdef.prestim    = 0;
+            cfg.trialdef.poststim   = 0;
+            cfg = ft_definetrial(cfg);
             
             cfg.channel        = all_channels;
             cfg.demean         = 'yes';
@@ -177,7 +162,7 @@ for nF=1:length(folders)
             cfgbs.detrend         = 'no';
             cfgbs.demean          = 'yes';
             dat2                  = ft_resampledata(cfgbs,dat); % read raw data
-            if isempty(data)
+            if k==1
                 data=dat2;
             else
                 data.trial=[data.trial dat2.trial];
@@ -186,16 +171,12 @@ for nF=1:length(folders)
         end
         
         
-        %%% take out trial
+        %%% interpolate channels
         thisF=match_str(LSRMDBadTrialsChannels.SubID,SubID);
         if isempty(thisF)
             continue;
         end
         eval(['badChannels=[' LSRMDBadTrialsChannels.ExcludedChannels{thisF} '];']);
-        eval(['badTrials=[' LSRMDBadTrialsChannels.ExcludedTrials{thisF} '];']);
-        cfg=[];
-        cfg.trials          = setdiff(1:length(data.trial),badTrials);
-        data = ft_preprocessing(cfg, data);
         
         %%% Layout
         mylabels=data.label;
@@ -239,17 +220,6 @@ for nF=1:length(folders)
             [data] = ft_channelrepair(cfg, data);
         end
         
-        %         %%% CSD
-        %         elec=[];
-        %         elec.label=layout.label;
-        %         elec.pos=layout.pos;
-        %         cfg=[];
-        %         cfg.method       = 'spline';
-        %         cfg.elec         = elec;
-        %         cfg.order        = 4;
-        %         cfg.degree       = 14;
-        %         [data] = ft_scalpcurrentdensity(cfg, data);
-        
         cfg=[];
         cfg.reref      = 'yes';
         cfg.refchannel = 'all';
@@ -269,19 +239,16 @@ for nF=1:length(folders)
         else
             cfg.component=[];
         end
+
         load([preproc_path filesep 'ICf_etrial_ft_f_etrial_ft_' SubID '.mat'],'comp');
         data = ft_rejectcomponent(cfg, comp, data);
         
-%         cfg           = [];
-%         cfg.toilim    = [-0.7 1.8];
-%         [data] = ft_redefinetrial(cfg, data);
-        
         cfg=[];
         cfg.demean          = 'yes';
-        cfg.baselinewindow  = [-0.1 0];
+%         cfg.baselinewindow  = [-1 0];
         data = ft_preprocessing(cfg,data);
         
-        %%%%%% Re-order channels
+ %%%%%% Re-order channels
         load(['..' filesep 'LS_RMD_Common_Electrodes.mat']);
         % fix channel names
         mylabels=data.label;
@@ -306,13 +273,11 @@ for nF=1:length(folders)
             data.trial{nTr}=data.trial{nTr}(newchanidx,:);
         end
         data.label=all_channels;
-        
-        save([preproc_path filesep 'ICAcleaned_etrial_ft_' SubID],'data','hdr');
-        
-        cfgerp        = [];
-        cfgerp.trials = 1:length(data.trial);
-        av_ERP = ft_timelockanalysis(cfgerp, data);
+                
+        save([preproc_path filesep 'ICAcleaned_eblock_ft_' SubID],'data');
         
     end
     toc;
 end
+
+
