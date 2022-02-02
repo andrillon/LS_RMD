@@ -31,7 +31,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 
 res_mat=[];
 myfreqs=1:0.1:40;
-redo=1; complete=0;
+redo=0; complete=0;
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 % 
@@ -111,7 +111,8 @@ for nF=1:5
         end
                
         save([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'],'subj_pow','newlabels','faxis');
-             
+    else
+        load([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat']);
     end
     
     %DP - in case I want to split by cohort
@@ -172,7 +173,7 @@ if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
 %          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
     
 end
-    save([powerspec_path filesep 'all_FFT_perBlock_byElec_ICAcleaned.mat'],'all_pow','all_group','all_agegroup');
+    save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned.mat'],'all_pow','all_group','all_agegroup');
 
 %% Topographies 25Hz tag  - need to check channel layout etc
 cfg = [];
@@ -192,12 +193,12 @@ cmap2=flipud(cmap2);
 
 figure; set(gcf,'Position',[213         173        1027/4         805/3]);
 % subplot(1,4,1);
-jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
+% jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
 format_fig;
 hold on;
-simpleTplot(faxis',squeeze(nanmean(all_pow(:,:,match_str(chLabels,'Cz'),:),3)),0,Colors(nD,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+simpleTplot(faxis',squeeze(nanmean(all_pow(:,:,match_str(newlabels,'Cz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
 xlim([2 30])
-ylim([-.7 2])
+% ylim([-.7 2])
 xlabel('Frequency (Hz)')
 ylabel('Power')
 % print([powerspec_path filesep 'Topo_FreqTag_Clusters_byFreq_v5.eps'],'-dpng', '-r300');
@@ -227,10 +228,10 @@ for nD=1:2
     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>8 & faxis<11),1),2),4));
     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
     colormap(cmap);
-    if nD==4
+    if nD==1
         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
     end
-    caxis([-2.5 -1]);
+%     caxis([-2.5 -1]);
 %     title(ColorsDlabels{nD});
 end
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
