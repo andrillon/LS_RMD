@@ -3,7 +3,7 @@ clear all;
 close all;
 
 %%
-run ../LS_RMD_localdef.m
+run LS_RMD_localdef.m
 addpath((path_fieldtrip));
 ft_defaults;
 addpath(genpath(path_LSCPtools));
@@ -39,6 +39,7 @@ redo=1; complete=0;
 % OldA_pow=[]; OldA_SNR=[]; OldA_SNRtag=[]; OldHN_pow=[]; OldHN_SNR=[]; OldHN_SNRtag=[];
 
 % for nF=1:length(files)
+nFc=0;
 for nF=1:5
     file_name = files(nF).name;
     folder_name = files(nF).folder;
@@ -48,10 +49,10 @@ for nF=1:5
     tic;
     fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
     
-    if redo==1 || exist([powerspec_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'])==0
+    if redo==1 || exist([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'])==0
         subj_pow=[];
-        subj_SNR=[];
-        subj_SNRtag=[];
+%         subj_SNR=[];
+%         subj_SNRtag=[];
                 
         load([folder_name filesep file_name]);
         
@@ -71,8 +72,10 @@ for nF=1:5
         end
                 
         fprintf('%2.0f-%2.0f\n',0,0)
-        
-        for nBl=1:size(data.trial,2)
+        if size(data.trial,2)<9
+            continue;
+        end
+        for nBl=1:9 %size(data.trial,2)
             
             temp_data=data.trial{nBl}(1:58,data.time{nBl}>0);
             temp_data=temp_data-repmat(mean(temp_data,2),1,size(temp_data,2));
@@ -100,14 +103,14 @@ for nF=1:5
                 [logSNR, faxis, logpow]=get_logSNR(block_data,data.fsample,param);
                 
                 subj_pow(nBl,nEl,:)=logpow(faxis<40);
-                subj_SNR(nBl,nEl,:)=logSNR(faxis<40);
-                [~,closestidx]=findclosest(faxis,25);
-                subj_SNRtag(nBl,nEl)=logSNR(closestidx);
+%                 subj_SNR(nBl,nEl,:)=logSNR(faxis<40);
+%                 [~,closestidx]=findclosest(faxis,25);
+%                 subj_SNRtag(nBl,nEl)=logSNR(closestidx);
                 faxis=faxis(faxis<40);
             end
         end
                
-        save([powerspec_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'],'subj_pow','subj_SNRtag','subj_SNR','faxis');
+        save([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'],'subj_pow','subj_SNRtag','subj_SNR','faxis');
              
     end
     
@@ -138,16 +141,38 @@ for nF=1:5
 %         OldHN_SNRtag(hn,:,:)=subj_SNRtag;
 %         hn=hn+1;
 %     end
-    
-    all_pow(nF,:,:,:)=subj_pow;
-    all_SNR(nF,:,:,:)=subj_SNR;
-    all_SNRtag(nF,:,:)=subj_SNRtag;
-    
-    save([powerspec_path filesep 'all_FFT_perBlock_byElec_ICAcleaned.mat'],'all_pow','all_SNRtag','all_SNR');
+    nFc=nFc+1;
+    all_pow(nFc,:,:,:)=subj_pow;
+%     all_SNR(nF,:,:,:)=subj_SNR;
+%     all_SNRtag(nF,:,:)=subj_SNRtag;
+
+
+if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
+        thisgroup=2;
+        thisagegroup=1;
+    elseif length(SubID)==7 % YOUNG (MONASH) - DOWN 50%COH
+        thisgroup=1;
+        thisagegroup=0;
+    elseif length(SubID)==11 % YOUNG (TRINITY) - DOWN 50%COH
+        thisgroup=3;
+        thisagegroup=0;
+    elseif length(SubID)==5 && SubID(3)=='8' % YOUNG - UP & DOWN 90%COH
+        thisgroup=4;
+        thisagegroup=0;
+    elseif length(SubID)==5 && SubID(3)=='9'% OLD - UP & DOWN 90%COH
+        thisgroup=5;
+        thisagegroup=1;
+    else
+        thisgroup=NaN;
+        thisagegroup=NaN;
+    end
+    all_group(nFc)=thisgroup; % STORE HERE THE INFO ABOUT THE GROUP
+    all_agegroup(nFc)=thisagegroup; % STORE HERE THE INFO ABOUT THE AGE GROUP
 %     save([powerspec_path filesep 'cohorts_FFT_perBlock_byElec_ICAcleaned.mat'],'YoungM_pow','YoungM_SNR','YoungM_SNRtag','YoungT_pow','YoungT_SNR','YoungT_SNRtag','YoungHN_pow','YoungHN_SNR','YoungHN_SNRtag',...
 %          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
     
 end
+    save([powerspec_path filesep 'all_FFT_perBlock_byElec_ICAcleaned.mat'],'all_pow','all_group','all_agegroup');
 
 %% Topographies 25Hz tag  - need to check channel layout etc
 cfg = [];
@@ -160,17 +185,6 @@ for nCh=1:length(layout.label)-2
     correspCh(nCh)=match_str(newlabels,layout.label(nCh));
 end
 
-figure; set(gcf,'Position',[213         173        1027         805/3]);
-cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
-cmap(cmap<0)=0;
-format_fig;
-temp_topo=squeeze(nanmean(nanmean(all_SNRtag(:,:,correspCh),1),3));
-simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
-colormap(cmap);
-hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
-caxis([0 1]*3);
-    
-print([powerspec_path filesep 'Topo_FreqTag_v5.eps'],'-dpng', '-r300')
 
 %%
 cmap2=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
@@ -181,62 +195,13 @@ figure; set(gcf,'Position',[213         173        1027/4         805/3]);
 jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
 format_fig;
 hold on;
-simpleTplot(faxis',squeeze(nanmean(all_SNR(:,:,match_str(chLabels,'Cz'),:),3)),0,Colors(nD,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+simpleTplot(faxis',squeeze(nanmean(all_pow(:,:,match_str(chLabels,'Cz'),:),3)),0,Colors(nD,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
 xlim([2 30])
 ylim([-.7 2])
 xlabel('Frequency (Hz)')
-ylabel('SNR')
-print([powerspec_path filesep 'Topo_FreqTag_Clusters_byFreq_v5.eps'],'-dpng', '-r300');
+ylabel('Power')
+% print([powerspec_path filesep 'Topo_FreqTag_Clusters_byFreq_v5.eps'],'-dpng', '-r300');
 
-%% DP - unsure how to adapt from drug study
-PosDrugs={[3 1],[2 1],[4 1];[],[2 3],[4 3];[],[],[4 2]};
-cmap2=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
-cmap2=flipud(cmap2);
-figure; set(gcf,'Position',[1 1 880 880]);
-winTime=[0.05 0.3];
-for nD=1:size(PosDrugs,1)
-    for nD2=1:size(PosDrugs,2)
-        if isempty(PosDrugs{nD,nD2})
-            continue;
-        end
-    subplot(3,3,3*(nD-1)+(nD2)); format_fig;
-    temp_topo=[];
-    for nCh=1:length(layout.label)-2
-        temp1=squeeze(nanmean(all_SNRtag(:,PosDrugs{nD,nD2}(1),:,match_str(chLabels,layout.label(nCh))),3));
-        temp0=squeeze(nanmean(all_SNRtag(:,PosDrugs{nD,nD2}(2),:,match_str(chLabels,layout.label(nCh))),3));
-        [h, pV, ~ , stats]=ttest(temp1,temp0);
-        temp_topo(nCh)=stats.tstat;%-...
-        %             squeeze(nanmean(nanmean(nanmean(all_ERP_NT_offset(:,nD,match_str(chLabels,layout.label(nCh)),xTime_offset>winTime(1) & xTime_offset<winTime(2)),1),2),4));
-    end
-    temp_topo1=squeeze(nanmean(all_SNRtag(:,PosDrugs{nD,nD2}(2),:,correspCh),3));
-    temp_topo2=squeeze(nanmean(all_SNRtag(:,PosDrugs{nD,nD2}(1),:,correspCh),3));
-    [stat] = compute_Topo_clusterPerm_v2(temp_topo1,temp_topo2,0,chLabels(correspCh),data_clean.fsample,0.05,0.05,1000,layout);
-    
-    
-    simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-    colormap(cmap2);
-    
-    if isfield(stat,'posclusters') && ~isempty(stat.posclusters)
-        sigClusters=find([stat.posclusters.prob]<0.05);
-        for k=1:length(sigClusters)
-            ft_plot_lay_me(layout, 'chanindx',find(stat.posclusterslabelmat==sigClusters(k)),'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
-        end
-    end
-    if isfield(stat,'negclusters') && ~isempty(stat.negclusters)
-        sigClusters=find([stat.negclusters.prob]<0.05);
-        for k=1:length(sigClusters)
-            ft_plot_lay_me(layout, 'chanindx',find(stat.negclusterslabelmat==sigClusters(k)),'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
-        end
-    end
-    if nD==4
-        hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
-    end
-    caxis([-1 1]*5);
-    title(sprintf('%s vs %s',ColorsDlabels{PosDrugs{nD,nD2}(1)},ColorsDlabels{PosDrugs{nD,nD2}(2)}));
-    end
-end
-
-print([powerspec_path filesep 'Topo_FreqTag_Clusters_v5.eps','-dpng', '-r300');
 
 %% Alpha 8-11Hz - needs adapting of nD etc
 % fix channel names
@@ -257,81 +222,81 @@ print([powerspec_path filesep 'Topo_FreqTag_Clusters_v5.eps','-dpng', '-r300');
 figure; set(gcf,'Position',[213         173        1027         805/3]);
 cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
 cmap(cmap<0)=0;
-for nD=1:4
-    subplot(1,4,nD); format_fig;
-    temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(:,nD,:,correspCh,faxis>8 & faxis<11),1),3),5));
+for nD=1:2
+    subplot(1,2,nD); format_fig;
+    temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>8 & faxis<11),1),2),4));
     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
     colormap(cmap);
     if nD==4
         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
     end
     caxis([-2.5 -1]);
-    title(ColorsDlabels{nD});
+%     title(ColorsDlabels{nD});
 end
-print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
+% print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
 
 %%
-% alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
-alphaFreqs=find((faxis>8 & faxis<11));
-figure; set(gcf,'Position',[213         173        1027/4         805/3]);
-% subplot(1,4,1); 
-format_fig;
-jbfill([8 11],[-5 -5],[-.5 -.5],[50,205,50]/256,[50,205,50]/256,1,0.2);
-hold on;
-for nD=1:4
-    simpleTplot(faxis',squeeze(nanmean(all_pow(:,nD,:,match_str(chLabels,'Cz'),:),3)),0,Colors(nD,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
-end
-xlim([2 30])
-ylim([[-5 -0.5]])
-xlabel('Frequency (Hz)')
-ylabel('Power (dB)')
-print([powerspec_path filesep 'Topo_Alpha_Clusters_byFreq_v5.eps'],'-dpng', '-r300');
-
-figure; set(gcf,'Position',[1 1 880 880]);
-winTime=[0.05 0.3];
-for nD=1:size(PosDrugs,1)
-    for nD2=1:size(PosDrugs,2)
-        if isempty(PosDrugs{nD,nD2})
-            continue;
-        end
-    subplot(3,3,3*(nD-1)+(nD2)); format_fig;
-    temp_topo=[];
-    for nCh=1:length(layout.label)-2
-        temp1=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(1),:,match_str(chLabels,layout.label(nCh)),alphaFreqs),3),5));
-        temp0=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(2),:,match_str(chLabels,layout.label(nCh)),alphaFreqs),3),5));
-        [h, pV, ~ , stats]=ttest(temp1,temp0);
-        temp_topo(nCh)=stats.tstat;%-...
-        %             squeeze(nanmean(nanmean(nanmean(all_ERP_NT_offset(:,nD,match_str(chLabels,layout.label(nCh)),xTime_offset>winTime(1) & xTime_offset<winTime(2)),1),2),4));
-    end
-    temp_topo1=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(2),:,correspCh,alphaFreqs),3),5));
-    temp_topo2=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(1),:,correspCh,alphaFreqs),3),5));
-    [stat] = compute_Topo_clusterPerm_v2(temp_topo1,temp_topo2,0,chLabels(correspCh),data_clean.fsample,0.05,0.05,1000,layout);
-    
-    
-    simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-    colormap(cmap2);
-    
-    if isfield(stat,'posclusters') && ~isempty(stat.posclusters)
-        sigClusters=find([stat.posclusters.prob]<0.05);
-        for k=1:length(sigClusters)
-            ft_plot_lay_me(layout, 'chanindx',find(stat.posclusterslabelmat==sigClusters(k)),'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
-        end
-    end
-    if isfield(stat,'negclusters') && ~isempty(stat.negclusters)
-        sigClusters=find([stat.negclusters.prob]<0.05);
-        for k=1:length(sigClusters)
-            ft_plot_lay_me(layout, 'chanindx',find(stat.negclusterslabelmat==sigClusters(k)),'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
-        end
-    end
-    if nD==4
-        hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
-    end
-    caxis([-1 1]*5);
-    title(sprintf('%s vs %s',ColorsDlabels{PosDrugs{nD,nD2}(1)},ColorsDlabels{PosDrugs{nD,nD2}(2)}));
-    end
-end
-
-print([powerspec_path filesep 'Topo_Alpha_Clusters_v5.eps'],'-dpng', '-r300');
+% % alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
+% alphaFreqs=find((faxis>8 & faxis<11));
+% figure; set(gcf,'Position',[213         173        1027/4         805/3]);
+% % subplot(1,4,1); 
+% format_fig;
+% jbfill([8 11],[-5 -5],[-.5 -.5],[50,205,50]/256,[50,205,50]/256,1,0.2);
+% hold on;
+% for nD=1:4
+%     simpleTplot(faxis',squeeze(nanmean(all_pow(:,nD,:,match_str(chLabels,'Cz'),:),3)),0,Colors(nD,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+% end
+% xlim([2 30])
+% ylim([[-5 -0.5]])
+% xlabel('Frequency (Hz)')
+% ylabel('Power (dB)')
+% print([powerspec_path filesep 'Topo_Alpha_Clusters_byFreq_v5.eps'],'-dpng', '-r300');
+% 
+% figure; set(gcf,'Position',[1 1 880 880]);
+% winTime=[0.05 0.3];
+% for nD=1:size(PosDrugs,1)
+%     for nD2=1:size(PosDrugs,2)
+%         if isempty(PosDrugs{nD,nD2})
+%             continue;
+%         end
+%     subplot(3,3,3*(nD-1)+(nD2)); format_fig;
+%     temp_topo=[];
+%     for nCh=1:length(layout.label)-2
+%         temp1=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(1),:,match_str(chLabels,layout.label(nCh)),alphaFreqs),3),5));
+%         temp0=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(2),:,match_str(chLabels,layout.label(nCh)),alphaFreqs),3),5));
+%         [h, pV, ~ , stats]=ttest(temp1,temp0);
+%         temp_topo(nCh)=stats.tstat;%-...
+%         %             squeeze(nanmean(nanmean(nanmean(all_ERP_NT_offset(:,nD,match_str(chLabels,layout.label(nCh)),xTime_offset>winTime(1) & xTime_offset<winTime(2)),1),2),4));
+%     end
+%     temp_topo1=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(2),:,correspCh,alphaFreqs),3),5));
+%     temp_topo2=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(1),:,correspCh,alphaFreqs),3),5));
+%     [stat] = compute_Topo_clusterPerm_v2(temp_topo1,temp_topo2,0,chLabels(correspCh),data_clean.fsample,0.05,0.05,1000,layout);
+%     
+%     
+%     simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+%     colormap(cmap2);
+%     
+%     if isfield(stat,'posclusters') && ~isempty(stat.posclusters)
+%         sigClusters=find([stat.posclusters.prob]<0.05);
+%         for k=1:length(sigClusters)
+%             ft_plot_lay_me(layout, 'chanindx',find(stat.posclusterslabelmat==sigClusters(k)),'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
+%         end
+%     end
+%     if isfield(stat,'negclusters') && ~isempty(stat.negclusters)
+%         sigClusters=find([stat.negclusters.prob]<0.05);
+%         for k=1:length(sigClusters)
+%             ft_plot_lay_me(layout, 'chanindx',find(stat.negclusterslabelmat==sigClusters(k)),'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
+%         end
+%     end
+%     if nD==4
+%         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+%     end
+%     caxis([-1 1]*5);
+%     title(sprintf('%s vs %s',ColorsDlabels{PosDrugs{nD,nD2}(1)},ColorsDlabels{PosDrugs{nD,nD2}(2)}));
+%     end
+% end
+% 
+% print([powerspec_path filesep 'Topo_Alpha_Clusters_v5.eps'],'-dpng', '-r300');
 
 %%
 % figure; set(gcf,'Position',[213         173        1027/4         805/3]);
