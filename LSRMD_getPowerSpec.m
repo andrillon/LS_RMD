@@ -110,7 +110,7 @@ for nF=1:5
             end
         end
                
-        save([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'],'subj_pow','subj_SNRtag','subj_SNR','faxis');
+        save([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'],'subj_pow','newlabels','faxis');
              
     end
     
