@@ -63,6 +63,7 @@ for nF=1:length(folders)
     if redo==1 || exist([preproc_path filesep 'ICAcleaned_eblock_ft_' SubID '.mat'])==0
         %%% Loop on individual block files
         all_channels=[];
+        data=[];
         for k=1:numBlocks
             if type_File==1
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*M' num2str(k) '.eeg']);
@@ -137,8 +138,12 @@ for nF=1:length(folders)
             cfg.dataset             = [file_folder filesep file_name];
             cfg.trialdef.prestim    = 0;
             cfg.trialdef.poststim   = 0;
+            try
             cfg = ft_definetrial(cfg);
-            
+            catch
+                warning('... ... no block found');
+                continue;
+            end
             cfg.channel        = all_channels;
             cfg.demean         = 'yes';
             cfg.lpfilter       = 'yes';        % enable high-pass filtering
@@ -162,7 +167,7 @@ for nF=1:length(folders)
             cfgbs.detrend         = 'no';
             cfgbs.demean          = 'yes';
             dat2                  = ft_resampledata(cfgbs,dat); % read raw data
-            if k==1
+            if isempty(data)
                 data=dat2;
             else
                 data.trial=[data.trial dat2.trial];
@@ -173,7 +178,7 @@ for nF=1:length(folders)
         
         %%% interpolate channels
         thisF=match_str(LSRMDBadTrialsChannels.SubID,SubID);
-        if isempty(thisF)
+        if isempty(thisF) || isempty(data)
             continue;
         end
         eval(['badChannels=[' LSRMDBadTrialsChannels.ExcludedChannels{thisF} '];']);

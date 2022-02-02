@@ -11,7 +11,7 @@ addpath(genpath(path_LSCPtools));
 files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 
 %%
-redo=0
+redo=0;
 for nF=1:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
@@ -22,10 +22,10 @@ for nF=1:length(files)
     fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
     
     
-    load([folder_name filesep file_name]);
     
     if redo==1 || exist([preproc_path filesep '..' filesep 'SWdetection' filesep 'allSW_' SubID '.mat'])==0
-        % fix channel names
+         load([folder_name filesep file_name]);
+   % fix channel names
         mylabels=data.label;
         for nCh=1:length(mylabels)
             findspace=findstr(mylabels{nCh},' ');

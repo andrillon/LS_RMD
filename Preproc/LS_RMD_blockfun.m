@@ -20,7 +20,9 @@ catch
     evt_values=cell2mat(evt_values);
     stim_idx=find(evt_values==5);
 end
-
+if isempty(stim_idx)
+    return;
+end
 begsample     = evt_samples(stim_idx(1)) - cfg.trialdef.prestim*hdr.Fs;
 endsample     = evt_samples(stim_idx(end)) + cfg.trialdef.poststim*hdr.Fs - 1;
 offset        = -cfg.trialdef.prestim*hdr.Fs;

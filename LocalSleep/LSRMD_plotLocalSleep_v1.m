@@ -18,6 +18,7 @@ all_UpS_perE=[];
         
 all_nSW=[];
 all_newlabels=[];
+num_ch_blocks=[];
 nFc=0;
 for nF=1:length(files)
     file_name = files(nF).name;
@@ -25,9 +26,29 @@ for nF=1:length(files)
     SubID=file_name(1:end-4);
     seps=findstr(SubID,'ft_');
     SubID=SubID(seps(1)+3:end);
+    
     tic;
     fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
     nFc=nFc+1;
+    if length(SubID)==4 && SubID(1)=='A'
+        group(nFc)=2;
+        agegroup(nFc)=1;
+    elseif length(SubID)==7
+        group(nFc)=1;
+        agegroup(nFc)=0;
+    elseif length(SubID)==11
+        group(nFc)=3;
+        agegroup(nFc)=1;
+    elseif length(SubID)==5 && SubID(3)=='8'
+        group(nFc)=4;
+        agegroup(nFc)=0;
+    elseif length(SubID)==5 && SubID(3)=='9'
+        group(nFc)=5;
+        agegroup(nFc)=1;
+    else
+        group(nFc)=NaN;
+        agegroup(nFc)=NaN;
+    end
     
     load([preproc_path filesep '..' filesep 'SWdetection' filesep 'SW_' SubID]); %,'slow_Waves','paramSW')
     
@@ -46,7 +67,8 @@ for nF=1:length(files)
             end
         end
     end
-    fprintf('... ... %g channels\n',length(newlabels))
+    fprintf('... ... %g channels and %g blocks\n',length(newlabels),length(data.trial))
+    num_ch_blocks=[num_ch_blocks ; [nF length(newlabels) length(data.trial) group(nFc) agegroup(nFc)]];
     all_newlabels=[all_newlabels ; newlabels];
     for nB=1:16
         nout=histc(slow_Waves(slow_Waves(:,2)==nB,3),1:length(newlabels));
@@ -115,8 +137,13 @@ title('Upward Slope')
 
 %% Plot by-block temporal dynamic of SW dens, amplitude and slope
 temp_plot=[];
-for nB=1:16
-    temp_plot(nB)=nanmean(all_nSW_perE(all_nSW_perE(:,2)==nB,2+match_str(newlabels,'Cz')));
+temp_plot2=[];
+for nB=1:8
+    temp_plot(nB)=nanmean(all_P2P_perE(all_P2P_perE(:,2)==nB,2+match_str(newlabels,'Cz')));
+    temp_plot2(nB)=sem(all_P2P_perE(all_P2P_perE(:,2)==nB,2+match_str(newlabels,'Cz')));
 end
 figure;
-plot(1:16,temp_plot);
+plot(1:8,temp_plot);
+hold on;
+plot(1:8,temp_plot-temp_plot2);
+plot(1:8,temp_plot+temp_plot2);
