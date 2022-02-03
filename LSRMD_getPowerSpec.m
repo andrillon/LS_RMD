@@ -40,7 +40,7 @@ redo=0; complete=0;
 
 % for nF=1:length(files)
 nFc=0;
-for nF=1:5
+for nF=1:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
     SubID=file_name(1:end-4);
