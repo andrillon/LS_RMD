@@ -38,7 +38,6 @@ redo=0; complete=0;
 % YoungM_pow=[]; YoungM_SNR=[]; YoungM_SNRtag=[]; YoungT_pow=[]; YoungT_SNR=[]; YoungT_SNRtag=[]; YoungHN_pow=[]; YoungHN_SNR=[]; YoungHN_SNRtag=[];
 % OldA_pow=[]; OldA_SNR=[]; OldA_SNRtag=[]; OldHN_pow=[]; OldHN_SNR=[]; OldHN_SNRtag=[];
 
-% for nF=1:length(files)
 nFc=0;
 for nF=1:length(files)
     file_name = files(nF).name;
@@ -75,7 +74,7 @@ for nF=1:length(files)
         if size(data.trial,2)<9
             continue;
         end
-        for nBl=1:9 %size(data.trial,2)
+        for nBl=1:9 %size(data.trial,2) %DP capping at 9 blocks
             
             temp_data=data.trial{nBl}(1:58,data.time{nBl}>0);
             temp_data=temp_data-repmat(mean(temp_data,2),1,size(temp_data,2));
@@ -222,15 +221,31 @@ ylabel('Power')
     
 figure; set(gcf,'Position',[213         173        1027         805/3]);
 cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
-cmap(cmap<0)=0;
+cmap(cmap<0)=0; 
+
+% DP 3/2/22 - tried extracting from loop but still didn't create subplot. Maybe issue with overlapping plots being overwritten?
+% subplot(1,2,1); format_fig;
+% temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==0,:,correspCh,faxis>8 & faxis<11),1),2),4));
+% simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+% colormap(cmap);
+% hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+% hold on
+% 
+% subplot(1,2,2); format_fig;
+% temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==1,:,correspCh,faxis>8 & faxis<11),1),2),4));
+% simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+% colormap(cmap);
+
 for nD=1:2
-    subplot(1,2,nD); format_fig;
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+%     subplot('Position',[]) %DP 3/2/22 manual positioning
     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>8 & faxis<11),1),2),4));
     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
     colormap(cmap);
     if nD==1
         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
     end
+% hold on %DP 3/2/22 - did not do anything
 %     caxis([-2.5 -1]);
 %     title(ColorsDlabels{nD});
 end
