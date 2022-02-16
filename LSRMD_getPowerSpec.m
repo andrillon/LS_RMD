@@ -7,7 +7,7 @@ run LS_RMD_localdef.m
 addpath((path_fieldtrip));
 ft_defaults;
 addpath(genpath(path_LSCPtools));
-
+addpath(genpath(path_IRASA))
 files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 
 %DP - in case I want to split by cohort
