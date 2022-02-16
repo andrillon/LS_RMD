@@ -101,7 +101,18 @@ for nF=1:length(files)
                 
                 [logSNR, faxis, logpow]=get_logSNR(block_data,data.fsample,param);
                 
+                rmpath(genpath([path_fieldtrip 'external' filesep 'signal' ]))
+                block_data_win=[];
+                for start=1:param.w_window/2:length(block_data)-param.w_window
+                    block_data_win=[block_data_win ; block_data(start:start+param.w_window)];
+                end
+                Frac = amri_sig_fractal(block_data_win',data.fsample,'detrend',1,'frange',[param.freqV(1) param.freqV(end)]);
+
                 subj_pow(nBl,nEl,:)=logpow(faxis<40);
+                subj_osci(nBl,nEl,:)=mean(Frac.osci,2);
+                subj_mixed(nBl,nEl,:)=mean(Frac.mixd,2);
+                subj_frac(nBl,nEl,:)=mean(Frac.frac,2);
+                frac_freq=Frac.freq;
 %                 subj_SNR(nBl,nEl,:)=logSNR(faxis<40);
 %                 [~,closestidx]=findclosest(faxis,25);
 %                 subj_SNRtag(nBl,nEl)=logSNR(closestidx);
@@ -109,7 +120,7 @@ for nF=1:length(files)
             end
         end
                
-        save([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'],'subj_pow','newlabels','faxis');
+        save([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'],'subj_pow','newlabels','faxis','subj_osci','subj_frac','subj_mixed','frac_freq');
     else
         load([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat']);
     end
@@ -143,6 +154,9 @@ for nF=1:length(files)
 %     end
     nFc=nFc+1;
     all_pow(nFc,:,:,:)=subj_pow;
+    if exist('subj_osci')~=0
+    all_osci(nFc,:,:,:)=subj_osci;
+    end
 %     all_SNR(nF,:,:,:)=subj_SNR;
 %     all_SNRtag(nF,:,:)=subj_SNRtag;
 
@@ -251,6 +265,15 @@ for nD=1:2
 end
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
 
+%%
+this_Ch=match_str(newlabels,'Cz');
+ColorsG=[0 0 0;1 0 0];
+figure;
+for nD=1:2
+    temp_data=squeeze(nanmean(all_pow(all_agegroup==nD-1,:,this_Ch,:),2));
+    [pV hplot]=simpleTplot(faxis',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
+    
+end
 %%
 % % alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
 % alphaFreqs=find((faxis>8 & faxis<11));
