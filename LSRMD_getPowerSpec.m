@@ -7,6 +7,7 @@ run LS_RMD_localdef.m
 addpath((path_fieldtrip));
 ft_defaults;
 addpath(genpath(path_LSCPtools));
+rmpath([path_fieldtrip filesep 'external' filesep 'signal']);
 addpath(genpath(path_IRASA))
 files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 
@@ -155,7 +156,13 @@ for nF=1:length(files)
     nFc=nFc+1;
     all_pow(nFc,:,:,:)=subj_pow;
     if exist('subj_osci')~=0
-    all_osci(nFc,:,:,:)=subj_osci;
+        all_osci(nFc,:,:,:)=subj_osci;
+    end
+    if exist('subj_mixed')~=0
+        all_mixed(nFc,:,:,:)=subj_mixed;
+    end
+    if exist('subj_frac')~=0
+        all_frac(nFc,:,:,:)=subj_frac;
     end
 %     all_SNR(nF,:,:,:)=subj_SNR;
 %     all_SNRtag(nF,:,:)=subj_SNRtag;
@@ -186,9 +193,9 @@ if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
 %          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
     
 end
-    save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned.mat'],'all_pow','all_group','all_agegroup');
+    save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned.mat'],'all_pow','all_group','all_agegroup','all_frac','all_osci','all_mixed');
 
-%% Topographies 25Hz tag  - need to check channel layout etc
+%% Topographies 25Hz tag
 cfg = [];
 cfg.layout = 'biosemi64.lay';
 cfg.channel=newlabels;
@@ -214,10 +221,9 @@ xlim([2 30])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
 ylabel('Power')
-% print([powerspec_path filesep 'Topo_FreqTag_Clusters_byFreq_v5.eps'],'-dpng', '-r300');
 
 
-%% Alpha 8-11Hz - needs adapting of nD etc
+%% Alpha 8-11Hz
 % fix channel names
     mylabels=data.label';
     for nCh=1:length(mylabels)
@@ -251,29 +257,40 @@ cmap(cmap<0)=0;
 % colormap(cmap);
 
 for nD=1:2
-    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-%     subplot('Position',[]) %DP 3/2/22 manual positioning
-    temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>8 & faxis<11),1),2),4));
+    subplot(1,2,nD); format_fig;
+%     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>1 & faxis<3),1),2),4)); %Delta
+%     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>4 & faxis<7),1),2),4)); %Theta
+    temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>8 & faxis<11),1),2),4)); %Alpha
+%     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>12 & faxis<29),1),2),4)); %Beta
     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
     colormap(cmap);
     if nD==1
         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
     end
-% hold on %DP 3/2/22 - did not do anything
-%     caxis([-2.5 -1]);
-%     title(ColorsDlabels{nD});
 end
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
 
 %%
+%Oz POz Pz CPz Cz Fz = midline
 this_Ch=match_str(newlabels,'Cz');
 ColorsG=[0 0 0;1 0 0];
 figure;
+%Periodic + aperiodic
+% for nD=1:2
+%     temp_data=squeeze(nanmean(all_pow(all_agegroup==nD-1,:,this_Ch,:),2));
+%     [pV hplot]=simpleTplot(faxis',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
+%     
+% end
+%Periodic only - frac = 1/f^x, osci = periodic component
 for nD=1:2
-    temp_data=squeeze(nanmean(all_pow(all_agegroup==nD-1,:,this_Ch,:),2));
-    [pV hplot]=simpleTplot(faxis',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
+    temp_data=squeeze(nanmean(all_osci(all_agegroup==nD-1,:,this_Ch,:),2));
+    [pV hplot]=simpleTplot(frac_freq',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
     
 end
+xlabel('Frequency (Hz)')
+ylabel('Power')
+
+Frac.freq
 %%
 % % alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
 % alphaFreqs=find((faxis>8 & faxis<11));
