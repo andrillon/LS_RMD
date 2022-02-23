@@ -222,7 +222,6 @@ xlim([2 30])
 xlabel('Frequency (Hz)')
 ylabel('Power')
 
-
 %% Alpha 8-11Hz
 % fix channel names
     mylabels=data.label';
@@ -290,7 +289,34 @@ end
 xlabel('Frequency (Hz)')
 ylabel('Power')
 
-Frac.freq
+
+cmap3=cbrewer('seq','Blues',32); % select a sequential colorscale from yellow to red (64)
+cmap3(cmap3<0)=0; 
+figure;
+nO=1;
+%DP - plotting all older adults' overall power freq
+% for nP=1:size(all_pow,1)
+%     if ismember(all_agegroup(nP),1)
+%             temp_data=permute(squeeze(nanmean(all_pow(nO,:,this_Ch,:),2)),[2 1]);
+%             [pV hplot]=simpleTplot(faxis',temp_data,0,cmap3(nO,:),0,'-',0.5,1,[],[],2);
+%             nO=nO+1;
+%     else
+%         continue
+%     end
+% end
+%DP - plotting all older adults' oscillatory component
+for nP=1:size(all_pow,1)
+    if ismember(all_agegroup(nP),1)
+            temp_data=permute(squeeze(nanmean(all_osci(nO,:,this_Ch,:),2)),[2 1]);
+            [pV hplot]=simpleTplot(frac_freq',temp_data,0,cmap3(nO,:),0,'-',0.5,1,[],[],2);
+            nO=nO+1;
+    else
+        continue
+    end
+end
+xlabel('Frequency (Hz)')
+ylabel('Power')
+
 %%
 % % alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
 % alphaFreqs=find((faxis>8 & faxis<11));
