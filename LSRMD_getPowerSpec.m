@@ -281,8 +281,14 @@ figure;
 %     
 % end
 %Periodic only - frac = 1/f^x, osci = periodic component
+% for nD=1:2
+%     temp_data=squeeze(nanmean(all_osci(all_agegroup==nD-1,:,this_Ch,:),2));
+%     [pV hplot]=simpleTplot(frac_freq',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
+%     
+% end
+%Aperiodic only
 for nD=1:2
-    temp_data=squeeze(nanmean(all_osci(all_agegroup==nD-1,:,this_Ch,:),2));
+    temp_data=squeeze(nanmean(all_frac(all_agegroup==nD-1,:,this_Ch,:),2));
     [pV hplot]=simpleTplot(frac_freq',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
     
 end
@@ -290,32 +296,44 @@ xlabel('Frequency (Hz)')
 ylabel('Power')
 
 
-cmap3=cbrewer('seq','Blues',32); % select a sequential colorscale from yellow to red (64)
+cmap3=cbrewer('seq','Blues',32);
 cmap3(cmap3<0)=0; 
+cmap4=cbrewer('seq','Reds',105);
+cmap4(cmap4<0)=0; 
 figure;
 nO=1;
 %DP - plotting all older adults' overall power freq
 % for nP=1:size(all_pow,1)
-%     if ismember(all_agegroup(nP),1)
-%             temp_data=permute(squeeze(nanmean(all_pow(nO,:,this_Ch,:),2)),[2 1]);
-%             [pV hplot]=simpleTplot(faxis',temp_data,0,cmap3(nO,:),0,'-',0.5,1,[],[],2);
-%             nO=nO+1;
+%     if ismember(all_agegroup(nP),1) %For younger adults change number to 0 and cmap to 4
+%         temp_data=permute(squeeze(nanmean(all_pow(nO,:,this_Ch,:),2)),[2 1]);
+%         [pV hplot]=simpleTplot(faxis',temp_data,0,cmap3(nO,:),0,'-',0.5,1,[],[],2);
+%         nO=nO+1;
 %     else
 %         continue
 %     end
 % end
 %DP - plotting all older adults' oscillatory component
-for nP=1:size(all_pow,1)
+% for nP=1:size(all_osci,1)
+%     if ismember(all_agegroup(nP),1)
+%             temp_data=permute(squeeze(nanmean(all_osci(nO,:,this_Ch,:),2)),[2 1]);
+%             [pV hplot]=simpleTplot(frac_freq',temp_data,0,cmap3(nO,:),0,'-',0.5,1,[],[],2);
+%             nO=nO+1;
+%     else
+%         continue
+%     end
+% end
+%DP - plotting all older adults' frac component
+for nP=1:size(all_frac,1)
     if ismember(all_agegroup(nP),1)
-            temp_data=permute(squeeze(nanmean(all_osci(nO,:,this_Ch,:),2)),[2 1]);
+            temp_data=permute(squeeze(nanmean(all_frac(nO,:,this_Ch,:),2)),[2 1]);
             [pV hplot]=simpleTplot(frac_freq',temp_data,0,cmap3(nO,:),0,'-',0.5,1,[],[],2);
             nO=nO+1;
     else
         continue
     end
 end
-xlabel('Frequency (Hz)')
-ylabel('Power')
+xlabel('Frequency (Hz)');
+ylabel('Power');
 
 %%
 % % alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
