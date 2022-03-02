@@ -6,6 +6,8 @@ close all;
 run LS_RMD_localdef.m
 addpath((path_fieldtrip));
 ft_defaults;
+                rmpath(genpath([path_fieldtrip 'external' filesep 'signal' ]))
+% 
 addpath(genpath(path_LSCPtools));
 addpath(genpath(path_IRASA))
 files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
@@ -30,11 +32,10 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-myfreqs=1:0.1:40;
-redo=0; complete=0;
+redo=1; complete=0;
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
-% 
+%
 % YoungM_pow=[]; YoungM_SNR=[]; YoungM_SNRtag=[]; YoungT_pow=[]; YoungT_SNR=[]; YoungT_SNRtag=[]; YoungHN_pow=[]; YoungHN_SNR=[]; YoungHN_SNRtag=[];
 % OldA_pow=[]; OldA_SNR=[]; OldA_SNRtag=[]; OldHN_pow=[]; OldHN_SNR=[]; OldHN_SNRtag=[];
 
@@ -48,11 +49,11 @@ for nF=1:length(files)
     tic;
     fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
     
-    if redo==1 || exist([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'])==0
+    if redo==1 || exist([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned_v2.mat'])==0
         subj_pow=[];
-%         subj_SNR=[];
-%         subj_SNRtag=[];
-                
+        %         subj_SNR=[];
+        %         subj_SNRtag=[];
+        
         load([folder_name filesep file_name]);
         
         % fix channel names
@@ -69,7 +70,7 @@ for nF=1:length(files)
                 end
             end
         end
-                
+        
         fprintf('%2.0f-%2.0f\n',0,0)
         if size(data.trial,2)<9
             continue;
@@ -96,72 +97,72 @@ for nF=1:length(files)
                 param.w_window=10*data.fsample;
                 param.w_overlap=param.w_window/2;
                 param.df=0.1;
-                param.freqV=2:0.1:40;
+                param.freqV=2:0.1:17;
                 param.mindist=0.5;
                 
                 [logSNR, faxis, logpow]=get_logSNR(block_data,data.fsample,param);
                 
-                rmpath(genpath([path_fieldtrip 'external' filesep 'signal' ]))
+%                 addpath(([path_fieldtrip filesep '/external/signal/dpss_hack']));
                 block_data_win=[];
                 for start=1:param.w_window/2:length(block_data)-param.w_window
                     block_data_win=[block_data_win ; block_data(start:start+param.w_window)];
                 end
                 Frac = amri_sig_fractal(block_data_win',data.fsample,'detrend',1,'frange',[param.freqV(1) param.freqV(end)]);
-
-                subj_pow(nBl,nEl,:)=logpow(faxis<40);
+                
+                subj_pow(nBl,nEl,:)=logpow(faxis<param.freqV(2));
                 subj_osci(nBl,nEl,:)=mean(Frac.osci,2);
                 subj_mixed(nBl,nEl,:)=mean(Frac.mixd,2);
                 subj_frac(nBl,nEl,:)=mean(Frac.frac,2);
                 frac_freq=Frac.freq;
-%                 subj_SNR(nBl,nEl,:)=logSNR(faxis<40);
-%                 [~,closestidx]=findclosest(faxis,25);
-%                 subj_SNRtag(nBl,nEl)=logSNR(closestidx);
-                faxis=faxis(faxis<40);
+                %                 subj_SNR(nBl,nEl,:)=logSNR(faxis<40);
+                %                 [~,closestidx]=findclosest(faxis,25);
+                %                 subj_SNRtag(nBl,nEl)=logSNR(closestidx);
+                faxis=faxis(faxis<param.freqV(2));
             end
         end
-               
-        save([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat'],'subj_pow','newlabels','faxis','subj_osci','subj_frac','subj_mixed','frac_freq');
+        
+        save([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'subj_pow','newlabels','faxis','subj_osci','subj_frac','subj_mixed','frac_freq');
     else
-        load([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned.mat']);
+        load([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned_v2.mat']);
     end
     
     %DP - in case I want to split by cohort
-%     if ismember(SubID,CohYoungM)
-%         YoungM_pow(m,:,:,:)=subj_pow;
-%         YoungM_SNR(m,:,:,:)=subj_SNR;
-%         YoungM_SNRtag(m,:,:)=subj_SNRtag;
-%         m=m+1;
-%     elseif ismember(SubID,CohYoungT)
-%         YoungT_pow(t,:,:,:)=subj_pow;
-%         YoungT_SNR(t,:,:,:)=subj_SNR;
-%         YoungT_SNRtag(t,:,:)=subj_SNRtag;
-%         t=t+1;
-%     elseif ismember(SubID,CohYoungHN)
-%         YoungHN_pow(h,:,:,:)=subj_pow;
-%         YoungHN_SNR(h,:,:,:)=subj_SNR;
-%         YoungHN_SNRtag(h,:,:)=subj_SNRtag;
-%         h=h+1;
-%     elseif ismember(SubID,CohOldA)
-%         OldA_pow(a,:,:,:)=subj_pow;
-%         OldA_SNR(a,:,:,:)=subj_SNR;
-%         OldA_SNRtag(a,:,:)=subj_SNRtag;
-%         a=a+1;
-%     elseif ismember(SubID,CohOldHN)
-%         OldHN_pow(hn,:,:,:)=subj_pow;
-%         OldHN_SNR(hn,:,:,:)=subj_SNR;
-%         OldHN_SNRtag(hn,:,:)=subj_SNRtag;
-%         hn=hn+1;
-%     end
+    %     if ismember(SubID,CohYoungM)
+    %         YoungM_pow(m,:,:,:)=subj_pow;
+    %         YoungM_SNR(m,:,:,:)=subj_SNR;
+    %         YoungM_SNRtag(m,:,:)=subj_SNRtag;
+    %         m=m+1;
+    %     elseif ismember(SubID,CohYoungT)
+    %         YoungT_pow(t,:,:,:)=subj_pow;
+    %         YoungT_SNR(t,:,:,:)=subj_SNR;
+    %         YoungT_SNRtag(t,:,:)=subj_SNRtag;
+    %         t=t+1;
+    %     elseif ismember(SubID,CohYoungHN)
+    %         YoungHN_pow(h,:,:,:)=subj_pow;
+    %         YoungHN_SNR(h,:,:,:)=subj_SNR;
+    %         YoungHN_SNRtag(h,:,:)=subj_SNRtag;
+    %         h=h+1;
+    %     elseif ismember(SubID,CohOldA)
+    %         OldA_pow(a,:,:,:)=subj_pow;
+    %         OldA_SNR(a,:,:,:)=subj_SNR;
+    %         OldA_SNRtag(a,:,:)=subj_SNRtag;
+    %         a=a+1;
+    %     elseif ismember(SubID,CohOldHN)
+    %         OldHN_pow(hn,:,:,:)=subj_pow;
+    %         OldHN_SNR(hn,:,:,:)=subj_SNR;
+    %         OldHN_SNRtag(hn,:,:)=subj_SNRtag;
+    %         hn=hn+1;
+    %     end
     nFc=nFc+1;
     all_pow(nFc,:,:,:)=subj_pow;
     if exist('subj_osci')~=0
-    all_osci(nFc,:,:,:)=subj_osci;
+        all_osci(nFc,:,:,:)=subj_osci;
     end
-%     all_SNR(nF,:,:,:)=subj_SNR;
-%     all_SNRtag(nF,:,:)=subj_SNRtag;
-
-
-if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
+    %     all_SNR(nF,:,:,:)=subj_SNR;
+    %     all_SNRtag(nF,:,:)=subj_SNRtag;
+    
+    
+    if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
         thisgroup=2;
         thisagegroup=1;
     elseif length(SubID)==7 % YOUNG (MONASH) - DOWN 50%COH
@@ -182,11 +183,11 @@ if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
     end
     all_group(nFc)=thisgroup; % STORE HERE THE INFO ABOUT THE GROUP
     all_agegroup(nFc)=thisagegroup; % STORE HERE THE INFO ABOUT THE AGE GROUP
-%     save([powerspec_path filesep 'cohorts_FFT_perBlock_byElec_ICAcleaned.mat'],'YoungM_pow','YoungM_SNR','YoungM_SNRtag','YoungT_pow','YoungT_SNR','YoungT_SNRtag','YoungHN_pow','YoungHN_SNR','YoungHN_SNRtag',...
-%          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
+    %     save([powerspec_path filesep 'cohorts_FFT_perBlock_byElec_ICAcleaned.mat'],'YoungM_pow','YoungM_SNR','YoungM_SNRtag','YoungT_pow','YoungT_SNR','YoungT_SNRtag','YoungHN_pow','YoungHN_SNR','YoungHN_SNRtag',...
+    %          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
     
 end
-    save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned.mat'],'all_pow','all_group','all_agegroup');
+save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned.mat'],'all_pow','all_group','all_agegroup');
 
 %% Topographies 25Hz tag  - need to check channel layout etc
 cfg = [];
@@ -219,23 +220,23 @@ ylabel('Power')
 
 %% Alpha 8-11Hz - needs adapting of nD etc
 % fix channel names
-    mylabels=data.label';
-    for nCh=1:length(mylabels)
-        findspace=findstr(mylabels{nCh},' ');
-        if isempty(findspace)
-            newlabels{nCh}=mylabels{nCh};
+mylabels=data.label';
+for nCh=1:length(mylabels)
+    findspace=findstr(mylabels{nCh},' ');
+    if isempty(findspace)
+        newlabels{nCh}=mylabels{nCh};
+    else
+        if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
+            newlabels{nCh}=mylabels{nCh}(findspace+1:end);
         else
-            if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
-                newlabels{nCh}=mylabels{nCh}(findspace+1:end);
-            else
-                newlabels{nCh}=mylabels{nCh}(1:findspace-1);
-            end
+            newlabels{nCh}=mylabels{nCh}(1:findspace-1);
         end
     end
-    
+end
+
 figure; set(gcf,'Position',[213         173        1027         805/3]);
 cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
-cmap(cmap<0)=0; 
+cmap(cmap<0)=0;
 
 % DP 3/2/22 - tried extracting from loop but still didn't create subplot. Maybe issue with overlapping plots being overwritten?
 % subplot(1,2,1); format_fig;
@@ -244,7 +245,7 @@ cmap(cmap<0)=0;
 % colormap(cmap);
 % hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
 % hold on
-% 
+%
 % subplot(1,2,2); format_fig;
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==1,:,correspCh,faxis>8 & faxis<11),1),2),4));
 % simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
@@ -252,16 +253,16 @@ cmap(cmap<0)=0;
 
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-%     subplot('Position',[]) %DP 3/2/22 manual positioning
+    %     subplot('Position',[]) %DP 3/2/22 manual positioning
     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>8 & faxis<11),1),2),4));
     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
     colormap(cmap);
     if nD==1
         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
     end
-% hold on %DP 3/2/22 - did not do anything
-%     caxis([-2.5 -1]);
-%     title(ColorsDlabels{nD});
+    % hold on %DP 3/2/22 - did not do anything
+    %     caxis([-2.5 -1]);
+    %     title(ColorsDlabels{nD});
 end
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
 
@@ -278,7 +279,7 @@ end
 % % alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
 % alphaFreqs=find((faxis>8 & faxis<11));
 % figure; set(gcf,'Position',[213         173        1027/4         805/3]);
-% % subplot(1,4,1); 
+% % subplot(1,4,1);
 % format_fig;
 % jbfill([8 11],[-5 -5],[-.5 -.5],[50,205,50]/256,[50,205,50]/256,1,0.2);
 % hold on;
@@ -290,7 +291,7 @@ end
 % xlabel('Frequency (Hz)')
 % ylabel('Power (dB)')
 % print([powerspec_path filesep 'Topo_Alpha_Clusters_byFreq_v5.eps'],'-dpng', '-r300');
-% 
+%
 % figure; set(gcf,'Position',[1 1 880 880]);
 % winTime=[0.05 0.3];
 % for nD=1:size(PosDrugs,1)
@@ -310,11 +311,11 @@ end
 %     temp_topo1=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(2),:,correspCh,alphaFreqs),3),5));
 %     temp_topo2=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(1),:,correspCh,alphaFreqs),3),5));
 %     [stat] = compute_Topo_clusterPerm_v2(temp_topo1,temp_topo2,0,chLabels(correspCh),data_clean.fsample,0.05,0.05,1000,layout);
-%     
-%     
+%
+%
 %     simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 %     colormap(cmap2);
-%     
+%
 %     if isfield(stat,'posclusters') && ~isempty(stat.posclusters)
 %         sigClusters=find([stat.posclusters.prob]<0.05);
 %         for k=1:length(sigClusters)
@@ -334,14 +335,14 @@ end
 %     title(sprintf('%s vs %s',ColorsDlabels{PosDrugs{nD,nD2}(1)},ColorsDlabels{PosDrugs{nD,nD2}(2)}));
 %     end
 % end
-% 
+%
 % print([powerspec_path filesep 'Topo_Alpha_Clusters_v5.eps'],'-dpng', '-r300');
 
 %%
 % figure; set(gcf,'Position',[213         173        1027/4         805/3]);
-% 
+%
 % print('-dpng', '-r300', '../../Figures/Cz_PowSpec_v5.png')
-% 
+%
 % figure; set(gcf,'Position',[213         173        1027/4         805/3]);
-% 
+%
 % % ylim([[-5 -0.5]])

@@ -1,6 +1,6 @@
 %%
 clear all
-close all
+% close all
 
 run ../LS_RMD_localdef.m
 
@@ -28,7 +28,7 @@ num_ch_blocks=[];
 nFc=0;
 group=[];
 agegroup=[];
-erplabels={'Fz','Cz','Pz','Oz'};
+erplabels=[];
 for nF=1:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
@@ -41,7 +41,7 @@ for nF=1:length(files)
         warning('subj has less than 8 blocks so skipping')
         continue;
     else
-        fprintf('subj has %g blocks, taking the first 5\n',max(all_Waves(:,2)))
+        fprintf('subj has %g blocks, taking the first 8\n',max(all_Waves(:,2)))
         all_Waves(all_Waves(:,2)>8,:)=[];
     end
     
@@ -89,19 +89,19 @@ for nF=1:length(files)
     
     %%% clean detection
     paramSW.prticle_Thr=90; % 80 or 90 or 95
-    paramSW.LimFrqW=[1 4]; % [1 4] or [4 10]
     paramSW.AmpCriterionIdx=4; % 9 (MaxNegpkAmp) or 11 (MaxPosPeakAmp) or 4 (P2P)
     paramSW.fixThr=[];
     paramSW.art_ampl=150;
     paramSW.max_posampl=75;
-    paramSW.max_Freq=7;
+    paramSW.max_Freq=8;
+    paramSW.min_Freq=4;
     
     all_Waves=double(all_Waves);
     all_freq=1./(abs((all_Waves(:,5)-all_Waves(:,7)))./data.fsample);
-    fprintf('... ... %g %% waves discarded because of frequency\n',mean(all_freq>paramSW.max_Freq)*100)
+    fprintf('... ... %g %% waves discarded because of frequency\n',mean(all_freq>paramSW.max_Freq | all_freq<paramSW.min_Freq)*100)
     fprintf('... ... %g %% waves discarded because of max P2P ampl\n',mean(all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl)*100)
     fprintf('... ... %g %% waves discarded because of max pos ampl\n',mean(all_Waves(:,11)>paramSW.max_posampl | all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl)*100)
-    all_Waves(all_freq>paramSW.max_Freq | all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl | all_Waves(:,11)>paramSW.max_posampl| all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl,:)=[];
+    all_Waves(all_freq>paramSW.max_Freq | all_freq<paramSW.min_Freq | all_Waves(:,paramSW.AmpCriterionIdx)>paramSW.art_ampl | all_Waves(:,11)>paramSW.max_posampl| all_Waves(:,14)>paramSW.art_ampl| abs(all_Waves(:,15))>paramSW.art_ampl,:)=[];
     slow_Waves=[];
     for nE=1:size(data.label,1)
         thisE_Waves=all_Waves(all_Waves(:,3)==nE,:);
@@ -364,13 +364,13 @@ for nB=1:8
     temp_plot(:,nB)=(all_nSW_perE_perB(all_nSW_perE_perB(:,2)==nB,offset+match_str(newlabels,'Fz')));
 end
 figure;
-subplot(1,2,1);
+subplot(1,3,1);
 simpleTplot(1:8,temp_plot,0,'k',0,'-',0.5,1,0,1,2);
 xlabel('Block Number')
 ylabel('SW density')
 format_fig;
 
-subplot(1,2,2);
+subplot(1,3,2);
 hp=[];
 [~,hp(1)]=simpleTplot(1:8,temp_plot(agegroup==0,:),0,[0 0 1],0,'-',0.5,1,0,1,2);
 [~,hp(2)]=simpleTplot(1:8,temp_plot(agegroup==1,:),0,[1 0 0],0,'-',0.5,1,0,1,2);
@@ -379,6 +379,23 @@ ylabel('SW density')
 legend(hp,{'Young','Old'})
 format_fig;
 
+subplot(1,3,3);
+hp=[];
+[~,hp(1)]=simpleTplot(1:8,temp_plot(group==1 | group==3,:),0,[0 0 1],0,'-',0.5,1,0,1,2);
+[~,hp(1)]=simpleTplot(1:8,temp_plot(group==4,:),0,[0 0 1],0,'--',0.5,1,0,1,2);
+[~,hp(2)]=simpleTplot(1:8,temp_plot(agegroup==1,:),0,[1 0 0],0,'-',0.5,1,0,1,2);
+xlabel('Block Number')
+ylabel('SW density')
+legend(hp,{'Young','Old'})
+format_fig;
+
+% OLD (MONASH) - UP & DOWN 90%COH | group(nFc)=2; agegroup(nFc)=1;
+% YOUNG (MONASH) - DOWN 50%COH | group(nFc)=1;agegroup(nFc)=0;
+% YOUNG (TRINITY) - DOWN 50%COH | group(nFc)=3;agegroup(nFc)=0;
+% YOUNG - UP & DOWN 90%COH | group(nFc)=4;agegroup(nFc)=0;
+% OLD - UP & DOWN 90%COH | group(nFc)=5; agegroup(nFc)=1;
+
+    
 %%
 figure
 mylabels={'Fz','Cz','Pz','Oz'};
