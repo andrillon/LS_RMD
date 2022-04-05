@@ -6,7 +6,7 @@ close all;
 run LS_RMD_localdef.m
 addpath((path_fieldtrip));
 ft_defaults;
-                rmpath(genpath([path_fieldtrip 'external' filesep 'signal' ]))
+rmpath(genpath([path_fieldtrip filesep 'external' filesep 'signal' ]))
 % 
 addpath(genpath(path_LSCPtools));
 addpath(genpath(path_IRASA))
@@ -158,6 +158,12 @@ for nF=1:length(files)
     if exist('subj_osci')~=0
         all_osci(nFc,:,:,:)=subj_osci;
     end
+    if exist('subj_mixed')~=0
+        all_mixed(nFc,:,:,:)=subj_mixed;
+    end
+    if exist('subj_frac')~=0
+        all_frac(nFc,:,:,:)=subj_frac;
+    end
     %     all_SNR(nF,:,:,:)=subj_SNR;
     %     all_SNRtag(nF,:,:)=subj_SNRtag;
     
@@ -187,9 +193,9 @@ for nF=1:length(files)
     %          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
     
 end
-save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned.mat'],'all_pow','all_group','all_agegroup');
+save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'all_pow','all_group','all_agegroup');
 
-%% Topographies 25Hz tag  - need to check channel layout etc
+%% Topographies 25Hz tag
 cfg = [];
 cfg.layout = 'biosemi64.lay';
 cfg.channel=newlabels;
@@ -215,11 +221,8 @@ xlim([2 30])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
 ylabel('Power')
-% print([powerspec_path filesep 'Topo_FreqTag_Clusters_byFreq_v5.eps'],'-dpng', '-r300');
 
-
-%% Alpha 8-11Hz - needs adapting of nD etc
-% fix channel names
+%% Alpha 8-11Hz
 mylabels=data.label';
 for nCh=1:length(mylabels)
     findspace=findstr(mylabels{nCh},' ');
@@ -253,16 +256,15 @@ cmap(cmap<0)=0;
 
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    %     subplot('Position',[]) %DP 3/2/22 manual positioning
-    temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>8 & faxis<11),1),2),4));
+    %     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>1 & faxis<3),1),2),4)); %Delta
+%     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>4 & faxis<7),1),2),4)); %Theta
+    temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>8 & faxis<11),1),2),4)); %Alpha
+%     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>12 & faxis<29),1),2),4)); %Beta
     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
     colormap(cmap);
     if nD==1
         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
     end
-    % hold on %DP 3/2/22 - did not do anything
-    %     caxis([-2.5 -1]);
-    %     title(ColorsDlabels{nD});
 end
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
 
@@ -270,11 +272,66 @@ end
 this_Ch=match_str(newlabels,'Cz');
 ColorsG=[0 0 0;1 0 0];
 figure;
+%Periodic + aperiodic
+% for nD=1:2
+%     temp_data=squeeze(nanmean(all_pow(all_agegroup==nD-1,:,this_Ch,:),2));
+%     [pV hplot]=simpleTplot(faxis',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
+%     
+% end
+%Periodic only - frac = 1/f^x, osci = periodic component
+% for nD=1:2
+%     temp_data=squeeze(nanmean(all_osci(all_agegroup==nD-1,:,this_Ch,:),2));
+%     [pV hplot]=simpleTplot(frac_freq',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
+%     
+% end
+%Aperiodic only
 for nD=1:2
-    temp_data=squeeze(nanmean(all_pow(all_agegroup==nD-1,:,this_Ch,:),2));
-    [pV hplot]=simpleTplot(faxis',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
-    
+    temp_data=squeeze(nanmean(all_frac(all_agegroup==nD-1,:,this_Ch,:),2));
+    [pV hplot]=simpleTplot(frac_freq',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
 end
+xlabel('Frequency (Hz)')
+ylabel('Power')
+
+
+cmap3=cbrewer('seq','Blues',32);
+cmap3(cmap3<0)=0; 
+cmap4=cbrewer('seq','Reds',105);
+cmap4(cmap4<0)=0; 
+figure;
+nO=1;
+%DP - plotting all older adults' overall power freq
+% for nP=1:size(all_pow,1)
+%     if ismember(all_agegroup(nP),1) %For younger adults change number to 0 and cmap to 4
+%         temp_data=permute(squeeze(nanmean(all_pow(nO,:,this_Ch,:),2)),[2 1]);
+%         [pV hplot]=simpleTplot(faxis',temp_data,0,cmap3(nO,:),0,'-',0.5,1,[],[],2);
+%         nO=nO+1;
+%     else
+%         continue
+%     end
+% end
+%DP - plotting all older adults' oscillatory component
+% for nP=1:size(all_osci,1)
+%     if ismember(all_agegroup(nP),1)
+%             temp_data=permute(squeeze(nanmean(all_osci(nO,:,this_Ch,:),2)),[2 1]);
+%             [pV hplot]=simpleTplot(frac_freq',temp_data,0,cmap3(nO,:),0,'-',0.5,1,[],[],2);
+%             nO=nO+1;
+%     else
+%         continue
+%     end
+% end
+%DP - plotting all older adults' frac component
+for nP=1:size(all_frac,1)
+    if ismember(all_agegroup(nP),1)
+            temp_data=permute(squeeze(nanmean(all_frac(nO,:,this_Ch,:),2)),[2 1]);
+            [pV hplot]=simpleTplot(frac_freq',temp_data,0,cmap3(nO,:),0,'-',0.5,1,[],[],2);
+            nO=nO+1;
+    else
+        continue
+    end
+end
+xlabel('Frequency (Hz)');
+ylabel('Power');
+
 %%
 % % alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
 % alphaFreqs=find((faxis>8 & faxis<11));
