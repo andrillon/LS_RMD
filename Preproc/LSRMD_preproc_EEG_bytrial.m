@@ -90,6 +90,7 @@ for nF=1:length(folders)
         % Epoch by trial
         data=[];
         all_trl=[];
+        all_sigtrl=[];
         for k=1:numBlocks
             if type_File==1
                 this_file=dir([folders(nF).folder filesep folders(nF).name filesep '*M' num2str(k) '.eeg']);
@@ -179,9 +180,12 @@ for nF=1:length(folders)
             dat2                  = ft_resampledata(cfgbs,dat); % read raw data
             if isempty(data)
                 data=dat2;
+                all_sigtrl=[all_sigtrl ; [k*ones(size(trl,1),1) trl]];
             else
                 data.trial=[data.trial dat2.trial];
                 data.time=[data.time dat2.time];
+                all_sigtrl=[all_sigtrl ; [k*ones(size(trl,1),1) trl]];
+%                 fprintf('!!!!!!! block %g %g trials in trl and %g in data\n',k,size(trl,1),length(dat2.trial))
             end
         end
         
@@ -196,6 +200,7 @@ for nF=1:length(folders)
         cfg=[];
         cfg.trials          = setdiff(1:length(data.trial),badTrials);
         data = ft_preprocessing(cfg, data);
+        all_sigtrl(badTrials,:)=[];
         
         %%% Layout
         mylabels=data.label;
@@ -308,6 +313,11 @@ for nF=1:length(folders)
         data.label=all_channels;
         
         save([preproc_path filesep 'ICAcleaned_etrial_ft_' SubID],'data','hdr');
+        table=array2table(all_sigtrl,'VariableNames',{'Block','Stat','End','Offset','Cond','RT','DiffOnset'});
+        if size(table,1)~=length(data.trial)
+            warning('NOT THE SAME SIZE BETWEEN DATA AND BEHAV')
+        end
+        writetable(table,[preproc_path filesep 'behav_' SubID '.csv']);
         
         cfgerp        = [];
         cfgerp.trials = 1:length(data.trial);

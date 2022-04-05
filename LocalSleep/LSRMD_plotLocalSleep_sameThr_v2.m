@@ -381,12 +381,12 @@ format_fig;
 
 subplot(1,3,3);
 hp=[];
-[~,hp(1)]=simpleTplot(1:8,temp_plot(group==1 | group==3,:),0,[0 0 1],0,'-',0.5,1,0,1,2);
-[~,hp(1)]=simpleTplot(1:8,temp_plot(group==4,:),0,[0 0 1],0,'--',0.5,1,0,1,2);
-[~,hp(2)]=simpleTplot(1:8,temp_plot(agegroup==1,:),0,[1 0 0],0,'-',0.5,1,0,1,2);
+[~,hp(1)]=simpleTplot(1:8,temp_plot(group==1 | group==3,:),0,[0 1 0],0,'-',0.5,1,0,1,2);
+[~,hp(2)]=simpleTplot(1:8,temp_plot(group==4,:),0,[0 0 1],0,'-',0.5,1,0,1,2);
+[~,hp(3)]=simpleTplot(1:8,temp_plot(agegroup==1,:),0,[1 0 0],0,'-',0.5,1,0,1,2);
 xlabel('Block Number')
 ylabel('SW density')
-legend(hp,{'Young','Old'})
+legend(hp,{'Y-50COH','Y-90COH','O-90COH'})
 format_fig;
 
 % OLD (MONASH) - UP & DOWN 90%COH | group(nFc)=2; agegroup(nFc)=1;
