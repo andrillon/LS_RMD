@@ -140,10 +140,12 @@ for nF=1:length(files)
     all_UpS_perE=[all_UpS_perE ; [nF 0 group(nFc) agegroup(nFc) UpS_out]];
     
     
+    table=readtable([preproc_path filesep 'behav_' SubID '.csv']);
+    table.RT(table.RT>3.5)=nan;
     
     for nB=1:8 %length(data.time)
         nout=histc(slow_Waves(slow_Waves(:,2)==nB,3),1:length(newlabels));
-        all_nSW_perE_perB=[all_nSW_perE_perB ; [nF nB group(nFc) agegroup(nFc) nout'./(length(data.time{nB})/data.fsample/60)]];
+        all_nSW_perE_perB=[all_nSW_perE_perB ; [nF nB group(nFc) agegroup(nFc) nout'./(length(data.time{nB})/data.fsample/60) nanmean(table.RT(table.Block==nB)) mean(isnan(table.RT(table.Block==nB)))]];
         P2P_out=[];
         DnS_out =[];
         UpS_out =[];
@@ -152,9 +154,9 @@ for nF=1:length(files)
             DnS_out(nE)=nanmean(slow_Waves(slow_Waves(:,2)==nB & slow_Waves(:,3)==nE,12));
             UpS_out(nE)=nanmean(slow_Waves(slow_Waves(:,2)==nB & slow_Waves(:,3)==nE,13));
         end
-        all_P2P_perE_perB=[all_P2P_perE_perB ; [nF nB group(nFc) agegroup(nFc) P2P_out]];
-        all_DnS_perE_perB=[all_DnS_perE_perB ; [nF nB group(nFc) agegroup(nFc) DnS_out]];
-        all_UpS_perE_perB=[all_UpS_perE_perB ; [nF nB group(nFc) agegroup(nFc) UpS_out]];
+        all_P2P_perE_perB=[all_P2P_perE_perB ; [nF nB group(nFc) agegroup(nFc) P2P_out nanmean(table.RT(table.Block==nB)) sum(isnan(table.RT(table.Block==nB)))]];
+        all_DnS_perE_perB=[all_DnS_perE_perB ; [nF nB group(nFc) agegroup(nFc) DnS_out nanmean(table.RT(table.Block==nB)) sum(isnan(table.RT(table.Block==nB)))]];
+        all_UpS_perE_perB=[all_UpS_perE_perB ; [nF nB group(nFc) agegroup(nFc) UpS_out nanmean(table.RT(table.Block==nB)) sum(isnan(table.RT(table.Block==nB)))]];
         
         for nE=1:length(erplabels)
             these_SW=slow_Waves(slow_Waves(:,2)==nB & slow_Waves(:,3)==find(ismember(newlabels,erplabels{nE})),5);
