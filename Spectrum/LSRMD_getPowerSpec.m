@@ -3,7 +3,7 @@ clear all;
 close all;
 
 %%
-run LS_RMD_localdef.m
+run ../LS_RMD_localdef.m
 addpath((path_fieldtrip));
 ft_defaults;
 rmpath(genpath([path_fieldtrip filesep 'external' filesep 'signal' ]))
@@ -38,7 +38,7 @@ redo=1; complete=0;
 %
 % YoungM_pow=[]; YoungM_SNR=[]; YoungM_SNRtag=[]; YoungT_pow=[]; YoungT_SNR=[]; YoungT_SNRtag=[]; YoungHN_pow=[]; YoungHN_SNR=[]; YoungHN_SNRtag=[];
 % OldA_pow=[]; OldA_SNR=[]; OldA_SNRtag=[]; OldHN_pow=[]; OldHN_SNR=[]; OldHN_SNRtag=[];
-
+absThr=250;
 nFc=0;
 for nF=1:length(files)
     file_name = files(nF).name;
@@ -100,24 +100,37 @@ for nF=1:length(files)
                 param.freqV=2:0.1:17;
                 param.mindist=0.5;
                 
-                [logSNR, faxis, logpow]=get_logSNR(block_data,data.fsample,param);
                 
 %                 addpath(([path_fieldtrip filesep '/external/signal/dpss_hack']));
                 block_data_win=[];
                 for start=1:param.w_window/2:length(block_data)-param.w_window
-                    block_data_win=[block_data_win ; block_data(start:start+param.w_window)];
+                    block_data_win=[block_data_win ; block_data(start:start+param.w_window)-mean(block_data(start:start+param.w_window))];
                 end
+                block_data_win_cleaned=block_data_win(max(abs(block_data_win),[],2)<absThr,:);
+                block_data_cleaned=reshape(block_data_win_cleaned',1,numel(block_data_win_cleaned));
+                if isempty(block_data_cleaned)==0
+                [logSNR, faxis, logpow]=get_logSNR(block_data_cleaned,data.fsample,param);
+
+                                
                 Frac = amri_sig_fractal(block_data_win',data.fsample,'detrend',1,'frange',[param.freqV(1) param.freqV(end)]);
                 
-                subj_pow(nBl,nEl,:)=logpow(faxis<param.freqV(2));
-                subj_osci(nBl,nEl,:)=mean(Frac.osci,2);
-                subj_mixed(nBl,nEl,:)=mean(Frac.mixd,2);
-                subj_frac(nBl,nEl,:)=mean(Frac.frac,2);
+                subj_pow(nBl,nEl,:)=logpow(faxis>=min(Frac.freq) & faxis<=max(Frac.freq));
+                subj_osci(nBl,nEl,:)=mean(Frac.osci(:,max(abs(block_data_win),[],2)<absThr),2);
+                subj_mixed(nBl,nEl,:)=mean(Frac.mixd(:,max(abs(block_data_win),[],2)<absThr),2);
+                subj_frac(nBl,nEl,:)=mean(Frac.frac(:,max(abs(block_data_win),[],2)<absThr),2);
+                subj_maxabs(nBl,nEl,:)=mean(Frac.frac(:,max(abs(block_data_win),[],2)<absThr),2);
                 frac_freq=Frac.freq;
                 %                 subj_SNR(nBl,nEl,:)=logSNR(faxis<40);
                 %                 [~,closestidx]=findclosest(faxis,25);
                 %                 subj_SNRtag(nBl,nEl)=logSNR(closestidx);
-                faxis=faxis(faxis<param.freqV(2));
+                faxis=faxis(faxis>=min(Frac.freq) & faxis<=max(Frac.freq));
+                else
+                    subj_pow(nBl,nEl,:)=nan(1,246);
+                subj_osci(nBl,nEl,:)=nan(1,246);
+                subj_mixed(nBl,nEl,:)=nan(1,246);
+                subj_frac(nBl,nEl,:)=nan(1,246);
+                subj_maxabs(nBl,nEl,:)=nan(1,246);
+                end
             end
         end
         
