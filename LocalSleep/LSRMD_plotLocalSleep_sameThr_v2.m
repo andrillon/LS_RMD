@@ -119,12 +119,15 @@ for nF=1:length(files)
         slow_Waves=[slow_Waves ; thisE_Waves(temp_p2p>thr_Wave(nFc,nE),:)];
     end
     
+        table=readtable([preproc_path filesep 'behav_' SubID '.csv']);
+    table.RT(table.RT>3.5)=nan;
+    
     fprintf('... ... %g channels and %g blocks\n',length(newlabels),length(data.trial))
     num_ch_blocks=[num_ch_blocks ; [nF length(newlabels) length(data.trial) group(nFc) agegroup(nFc) mean(cellfun(@length,data.time)/data.fsample/60) length(etrial_data.data.trial)]];
     all_newlabels=[all_newlabels ; newlabels];
     
     nout=histc(slow_Waves(:,3),1:length(newlabels));
-    all_nSW_perE=[all_nSW_perE ; [nF 0 group(nFc) agegroup(nFc) nout'./(sum(cellfun(@length,data.time(1:5)))/data.fsample/60)]];
+    all_nSW_perE=[all_nSW_perE ; [nF 0 group(nFc) agegroup(nFc) nout'./(sum(cellfun(@length,data.time(1:5)))/data.fsample/60) nanmean(table.RT) mean(isnan(table.RT))]];
     all_nSW(nFc,1)=mean(nout);
     
     P2P_out=[];
@@ -140,8 +143,7 @@ for nF=1:length(files)
     all_UpS_perE=[all_UpS_perE ; [nF 0 group(nFc) agegroup(nFc) UpS_out]];
     
     
-    table=readtable([preproc_path filesep 'behav_' SubID '.csv']);
-    table.RT(table.RT>3.5)=nan;
+
     
     for nB=1:8 %length(data.time)
         nout=histc(slow_Waves(slow_Waves(:,2)==nB,3),1:length(newlabels));
