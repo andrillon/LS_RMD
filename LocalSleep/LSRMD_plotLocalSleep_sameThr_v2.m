@@ -119,6 +119,9 @@ for nF=1:length(files)
         slow_Waves=[slow_Waves ; thisE_Waves(temp_p2p>thr_Wave(nFc,nE),:)];
     end
     
+    if exist([preproc_path filesep 'behav_' SubID '.csv'])==0
+        continue;
+    end
         table=readtable([preproc_path filesep 'behav_' SubID '.csv']);
     table.RT(table.RT>3.5)=nan;
     

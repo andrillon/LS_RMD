@@ -107,10 +107,10 @@ for nF=1:length(files)
                     block_data_win=[block_data_win ; block_data(start:start+param.w_window)-mean(block_data(start:start+param.w_window))];
                 end
                 block_data_win_cleaned=block_data_win(max(abs(block_data_win),[],2)<absThr,:);
-                block_data_cleaned=reshape(block_data_win_cleaned',1,numel(block_data_win_cleaned));
+%                 block_data_cleaned=reshape(block_data_win_cleaned',1,numel(block_data_win_cleaned));
                 if isempty(block_data_cleaned)==0
-                [logSNR, faxis, logpow]=get_logSNR(block_data_cleaned,data.fsample,param);
-
+                [logSNR, faxis, logpow]=get_logSNR(block_data_win_cleaned,data.fsample,param);
+                logpow=mean(logpow,1);
                                 
                 Frac = amri_sig_fractal(block_data_win',data.fsample,'detrend',1,'frange',[param.freqV(1) param.freqV(end)]);
                 
