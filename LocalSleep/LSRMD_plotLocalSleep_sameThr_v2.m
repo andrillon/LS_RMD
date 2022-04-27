@@ -417,3 +417,27 @@ for nplot=1:length(mylabels)
     xlabel('Time from onset (s)')
     ylabel('Voltage (\muV)')
 end
+
+%% Correlation with behaviour
+[r_RT_perB, pV_RT_perB]=corr(all_nSW_perE_perB(:,5:62),all_nSW_perE_perB(:,63),'rows','pairwise','type','spearman');
+[r_RT, pV_RT]=corr(all_nSW_perE(:,5:62),all_nSW_perE(:,63),'rows','pairwise','type','spearman');
+
+
+figure;
+temp_topo=r_RT_perB; temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+title(['Correlation SW * RT'])
+% colormap(cmap);
+colorbar; caxis([-1 1]*max(abs(temp_topo)))
+
+
+[r_Miss_perB, pV_Miss_perB]=corr(all_nSW_perE_perB(:,5:62),all_nSW_perE_perB(:,64),'rows','pairwise','type','spearman');
+[r_Miss, pV_Miss]=corr(all_nSW_perE(:,5:62),all_nSW_perE(:,64),'rows','pairwise','type','spearman');
+
+
+figure;
+temp_topo=r_Miss_perB; temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+title(['Correlation SW * Misses'])
+% colormap(cmap);
+colorbar; caxis([-1 1]*max(abs(temp_topo)))
