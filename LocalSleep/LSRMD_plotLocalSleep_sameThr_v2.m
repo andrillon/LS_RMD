@@ -1,6 +1,6 @@
 %%
 clear all
-% close all
+close all
 
 run ../LS_RMD_localdef.m
 
