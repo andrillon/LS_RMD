@@ -36,7 +36,13 @@ for nF=1:length(files)
     seps=findstr(SubID,'ft_');
     SubID=SubID(seps(1)+3:end);
     
-    load([preproc_path filesep '..' filesep 'SWdetection' filesep 'allSW_' SubID]); %,'slow_Waves','paramSW')
+    try %DP skipping missing files
+        load([preproc_path filesep 'SWdetection' filesep 'allSW_' SubID]); %,'slow_Waves','paramSW') %DP temporary fix for directory
+%         load([preproc_path filesep '..' filesep 'SWdetection' filesep 'allSW_' SubID]); %,'slow_Waves','paramSW')
+    catch
+        warning('subj has no allSW file so skipping')
+        continue;
+    end
     if max(all_Waves(:,2))<8
         warning('subj has less than 8 blocks so skipping')
         continue;
@@ -425,6 +431,10 @@ end
 [r_RT_perB, pV_RT_perB]=corr(all_nSW_perE_perB(:,5:62),all_nSW_perE_perB(:,63),'rows','pairwise','type','spearman');
 [r_RT, pV_RT]=corr(all_nSW_perE(:,5:62),all_nSW_perE(:,63),'rows','pairwise','type','spearman');
 
+%DP splitting correlations by age grp
+[r_RT_perB_Young, pV_RT_perB_Young]=corr(all_nSW_perE_perB(all_nSW_perE_perB(:,4)==0,5:62),all_nSW_perE_perB(all_nSW_perE_perB(:,4)==0,63),'rows','pairwise','type','spearman');
+[r_RT_perB_Old, pV_RT_perB_Old]=corr(all_nSW_perE_perB(all_nSW_perE_perB(:,4)==1,5:62),all_nSW_perE_perB(all_nSW_perE_perB(:,4)==1,63),'rows','pairwise','type','spearman');
+
 
 figure;
 temp_topo=r_RT_perB; temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
@@ -433,14 +443,45 @@ title(['Correlation SW * RT'])
 % colormap(cmap);
 colorbar; caxis([-1 1]*max(abs(temp_topo)))
 
+figure;
+temp_topo=r_RT_perB_Young; temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+title(['Correlation SW * RT - Young Adults'])
+% colormap(cmap);
+colorbar; caxis([-1 1]*max(abs(temp_topo)))
+
+figure;
+temp_topo=r_RT_perB_Old; temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+title(['Correlation SW * RT - Older Adults'])
+% colormap(cmap);
+colorbar; caxis([-1 1]*max(abs(temp_topo)))
+
 
 [r_Miss_perB, pV_Miss_perB]=corr(all_nSW_perE_perB(:,5:62),all_nSW_perE_perB(:,64),'rows','pairwise','type','spearman');
 [r_Miss, pV_Miss]=corr(all_nSW_perE(:,5:62),all_nSW_perE(:,64),'rows','pairwise','type','spearman');
 
+%DP splitting correlations by age group
+[r_Miss_perB_Young, pV_Miss_perB_Young]=corr(all_nSW_perE_perB(all_nSW_perE_perB(:,4)==0,5:62),all_nSW_perE_perB(all_nSW_perE_perB(:,4)==0,64),'rows','pairwise','type','spearman');
+[r_Miss_perB_Old, pV_Miss_perB_Old]=corr(all_nSW_perE_perB(all_nSW_perE_perB(:,4)==1,5:62),all_nSW_perE_perB(all_nSW_perE_perB(:,4)==1,64),'rows','pairwise','type','spearman');
 
 figure;
 temp_topo=r_Miss_perB; temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
 title(['Correlation SW * Misses'])
+% colormap(cmap);
+colorbar; caxis([-1 1]*max(abs(temp_topo)))
+
+figure;
+temp_topo=r_Miss_perB_Young; temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+title(['Correlation SW * Misses - Young Adults'])
+% colormap(cmap);
+colorbar; caxis([-1 1]*max(abs(temp_topo)))
+
+figure;
+temp_topo=r_Miss_perB_Old; temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+title(['Correlation SW * Misses - Older Adults'])
 % colormap(cmap);
 colorbar; caxis([-1 1]*max(abs(temp_topo)))
