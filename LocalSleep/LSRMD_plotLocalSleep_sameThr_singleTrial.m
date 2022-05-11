@@ -161,7 +161,7 @@ for nF=1:length(files)
             if size(out_waves_Tr,1)>1
                 out_waves_Tr=out_waves_Tr';
             end
-            all_waves_byTr=[all_waves_byTr ; [nB nTr group(nFc) agegroup(nFc) temp_Behav.Cond(nTr) temp_Behav.RT(nTr) out_waves_Tr]];
+            all_waves_byTr=[all_waves_byTr ; [nFc nB nTr group(nFc) agegroup(nFc) temp_Behav.Cond(nTr) temp_Behav.RT(nTr) out_waves_Tr]];
             
             
             temp_P2P_out = nan(1,length(newlabels));
@@ -172,9 +172,9 @@ for nF=1:length(files)
                 temp_DnS_out(nE)=nanmean(waves_Tr(waves_Tr(:,3)==nE,12));
                 temp_UpS_out(nE)=nanmean(waves_Tr( waves_Tr(:,3)==nE,13));
             end
-            all_P2P_byTr=[all_P2P_byTr ; [nB nTr group(nFc) agegroup(nFc) temp_Behav.Cond(nTr) temp_Behav.RT(nTr) temp_P2P_out]];
-            all_DnS_byTr=[all_DnS_byTr ; [nB nTr group(nFc) agegroup(nFc) temp_Behav.Cond(nTr) temp_Behav.RT(nTr) temp_P2P_out]];
-            all_UpS_byTr=[all_UpS_byTr ; [nB nTr group(nFc) agegroup(nFc) temp_Behav.Cond(nTr) temp_Behav.RT(nTr) temp_P2P_out]];
+            all_P2P_byTr=[all_P2P_byTr ; [nFc nB nTr group(nFc) agegroup(nFc) temp_Behav.Cond(nTr) temp_Behav.RT(nTr) temp_P2P_out]];
+            all_DnS_byTr=[all_DnS_byTr ; [nFc nB nTr group(nFc) agegroup(nFc) temp_Behav.Cond(nTr) temp_Behav.RT(nTr) temp_P2P_out]];
+            all_UpS_byTr=[all_UpS_byTr ; [nFc nB nTr group(nFc) agegroup(nFc) temp_Behav.Cond(nTr) temp_Behav.RT(nTr) temp_P2P_out]];
 
         end
     end
@@ -447,7 +447,7 @@ colorbar; caxis([-1 1]*max(abs(temp_topo)))
 
 %% Ploting by condition
 mySubs=unique(all_waves_byTr(:,1));
-offset=6;
+offset=7;
 clims=[9.1 11.8; 19 37; 250 450; 250 450];
 figure;
 subplot(1,4,1);
@@ -467,7 +467,7 @@ subplot(1,4,2);
 temp_topo1=[];
 for nCh=1:length(layout.label)-2
     for nS=1:length(mySubs)
-        temp_topo1(nCh,nS)=nanmean(all_waves_byTr(all_waves_byTr(:,1)==mySubs(nS) & all_waves_byTr(:,5)==1,offset+match_str(newlabels,layout.label(nCh))),1)*60;
+        temp_topo1(nCh,nS)=nanmean(all_waves_byTr(all_waves_byTr(:,1)==mySubs(nS) & all_waves_byTr(:,6)==1,offset+match_str(newlabels,layout.label(nCh))),1)*60;
     end
 end
 temp_topo=mean(temp_topo1,2);
@@ -480,7 +480,7 @@ subplot(1,4,3);
 temp_topo2=[];
 for nCh=1:length(layout.label)-2
     for nS=1:length(mySubs)
-        temp_topo2(nCh,nS)=nanmean(all_waves_byTr(all_waves_byTr(:,1)==mySubs(nS) & all_waves_byTr(:,5)==2,offset+match_str(newlabels,layout.label(nCh))),1)*60;
+        temp_topo2(nCh,nS)=nanmean(all_waves_byTr(all_waves_byTr(:,1)==mySubs(nS) & all_waves_byTr(:,6)==2,offset+match_str(newlabels,layout.label(nCh))),1)*60;
     end
 end
 temp_topo=mean(temp_topo2,2);
@@ -494,6 +494,6 @@ subplot(1,4,4);
 [h, pV, ~, stats]=ttest(temp_topo1',temp_topo2');
 temp_topo=stats.tstat;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
-simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
 title('t-valie - Cond 1 vs 2')
 colorbar; 
