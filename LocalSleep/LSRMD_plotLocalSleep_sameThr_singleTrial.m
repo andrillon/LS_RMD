@@ -35,7 +35,12 @@ for nF=1:length(files)
     seps=findstr(SubID,'ft_');
     SubID=SubID(seps(1)+3:end);
     
-    load([preproc_path filesep '..' filesep 'SWdetection' filesep 'allSW_' SubID]); %,'slow_Waves','paramSW')
+%     load([preproc_path filesep '..' filesep 'SWdetection' filesep 'allSW_' SubID]); %,'slow_Waves','paramSW')
+    try
+        load([preproc_path filesep 'SWdetection' filesep 'allSW_' SubID]); %,'slow_Waves','paramSW')
+    catch
+        continue
+    end
     if max(all_Waves(:,2))<8
         warning('subj has less than 8 blocks so skipping')
         continue;
@@ -445,7 +450,7 @@ title(['Correlation SW * Misses'])
 % colormap(cmap);
 colorbar; caxis([-1 1]*max(abs(temp_topo)))
 
-%% Ploting by condition
+%% Plotting by condition
 mySubs=unique(all_waves_byTr(:,1));
 offset=7;
 clims=[9.1 11.8; 19 37; 250 450; 250 450];
@@ -494,6 +499,135 @@ subplot(1,4,4);
 [h, pV, ~, stats]=ttest(temp_topo1',temp_topo2');
 temp_topo=stats.tstat;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
-simpleTopoPlot_ft(temp_topo', layout,'labels',[],0,1);
-title('t-valie - Cond 1 vs 2')
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title('t-value - Cond 1 vs 2')
+colorbar; 
+
+%% Plotting by condition - young vs old
+mySubs=unique(all_waves_byTr(:,1));
+offset=7;
+clims=[9.1 11.8; 19 37; 250 450; 250 450];
+figure;
+%Young
+subplot(2,4,1);
+temp_topo=[];
+for nCh=1:length(layout.label)-2
+    for nS=1:length(mySubs)
+        if agegroup(nS)==0
+        temp_topo(nCh,nS)=nanmean(all_waves_byTr(all_waves_byTr(:,1)==mySubs(nS),offset+match_str(newlabels,layout.label(nCh))),1)*60;
+        else
+            continue
+        end
+    end
+end
+temp_topo=mean(temp_topo,2);
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title('Density - Cond 1&2, Younger Adults')
+colorbar; 
+
+subplot(2,4,2);
+temp_topo1=[];
+for nCh=1:length(layout.label)-2
+    for nS=1:length(mySubs)
+        if agegroup(nS)==0
+        temp_topo1(nCh,nS)=nanmean(all_waves_byTr(all_waves_byTr(:,1)==mySubs(nS) & all_waves_byTr(:,6)==1,offset+match_str(newlabels,layout.label(nCh))),1)*60;
+        else
+            continue
+        end
+    end
+end
+temp_topo=mean(temp_topo1,2);
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title('Density - Cond 1, Younger Adults')
+colorbar; 
+
+subplot(2,4,3);
+temp_topo2=[];
+for nCh=1:length(layout.label)-2
+    for nS=1:length(mySubs)
+        if agegroup(nS)==0
+        temp_topo2(nCh,nS)=nanmean(all_waves_byTr(all_waves_byTr(:,1)==mySubs(nS) & all_waves_byTr(:,6)==2,offset+match_str(newlabels,layout.label(nCh))),1)*60;
+        else
+            continue
+        end
+    end
+end
+temp_topo=mean(temp_topo2,2);
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title('Density - Cond 2, Younger Adults')
+colorbar; 
+
+
+subplot(2,4,4);
+[h, pV, ~, stats]=ttest(temp_topo1',temp_topo2');
+temp_topo=stats.tstat;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title('t-value - Cond 1 vs 2, Younger Adults')
+colorbar; 
+
+%Old
+subplot(2,4,5);
+temp_topo=[];
+temp_topo1=[];
+temp_topo2=[];
+for nCh=1:length(layout.label)-2
+    for nS=1:length(mySubs)
+        if agegroup(nS)==1
+        temp_topo(nCh,nS)=nanmean(all_waves_byTr(all_waves_byTr(:,1)==mySubs(nS),offset+match_str(newlabels,layout.label(nCh))),1)*60;
+        else
+            continue
+        end
+    end
+end
+temp_topo=mean(temp_topo,2);
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title('Density - Cond 1&2, Older Adults')
+colorbar; 
+
+subplot(2,4,6);
+temp_topo1=[];
+for nCh=1:length(layout.label)-2
+    for nS=1:length(mySubs)
+        if agegroup(nS)==1
+        temp_topo1(nCh,nS)=nanmean(all_waves_byTr(all_waves_byTr(:,1)==mySubs(nS) & all_waves_byTr(:,6)==1,offset+match_str(newlabels,layout.label(nCh))),1)*60;
+        else
+            continue
+        end
+    end
+end
+temp_topo=mean(temp_topo1,2);
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title('Density - Cond 1, Older Adults')
+colorbar; 
+
+subplot(2,4,7);
+temp_topo2=[];
+for nCh=1:length(layout.label)-2
+    for nS=1:length(mySubs)
+        if agegroup(nS)==1
+        temp_topo2(nCh,nS)=nanmean(all_waves_byTr(all_waves_byTr(:,1)==mySubs(nS) & all_waves_byTr(:,6)==2,offset+match_str(newlabels,layout.label(nCh))),1)*60;
+        else
+            continue
+        end
+    end
+end
+temp_topo=mean(temp_topo2,2);
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title('Density - Cond 2, Older Adults')
+colorbar; 
+
+
+subplot(2,4,8);
+[h, pV, ~, stats]=ttest(temp_topo1',temp_topo2');
+temp_topo=stats.tstat;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title('t-value - Cond 1 vs 2, Older Adults')
 colorbar; 
