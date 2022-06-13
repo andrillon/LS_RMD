@@ -108,7 +108,7 @@ for nF=1:length(files)
                 end
                 block_data_win_cleaned=block_data_win(max(abs(block_data_win),[],2)<absThr,:);
 %                 block_data_cleaned=reshape(block_data_win_cleaned',1,numel(block_data_win_cleaned));
-                if isempty(block_data_cleaned)==0
+                if isempty(block_data_win_cleaned)==0
                 [logSNR, faxis, logpow]=get_logSNR(block_data_win_cleaned,data.fsample,param);
                 logpow=mean(logpow,1);
                                 
@@ -282,30 +282,34 @@ end
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
 
 %%
-this_Ch=match_str(newlabels,'Cz');
+this_Ch=match_str(newlabels,'Fz');
 ColorsG=[0 0 0;1 0 0];
 figure;
 %Periodic + aperiodic
-% for nD=1:2
-%     temp_data=squeeze(nanmean(all_pow(all_agegroup==nD-1,:,this_Ch,:),2));
-%     [pV hplot]=simpleTplot(faxis',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
-%     
-% end
-%Periodic only - frac = 1/f^x, osci = periodic component
-% for nD=1:2
-%     temp_data=squeeze(nanmean(all_osci(all_agegroup==nD-1,:,this_Ch,:),2));
-%     [pV hplot]=simpleTplot(frac_freq',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
-%     
-% end
-%Aperiodic only
+mygroups={[1 3 4],[2 5]};
+subplot(1,3,1)
 for nD=1:2
-    temp_data=squeeze(nanmean(all_frac(all_agegroup==nD-1,:,this_Ch,:),2));
+    temp_data=squeeze(nanmean(log10(all_mixed(ismember(all_group,mygroups{nD}),:,this_Ch,:)),2));
+    [pV hplot]=simpleTplot((faxis)',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
+    
+end
+%Periodic only - frac = 1/f^x, osci = periodic component
+subplot(1,3,2)
+for nD=1:2
+    temp_data=squeeze(nanmean(all_osci(ismember(all_group,mygroups{nD}),:,this_Ch,:),2));
+    [pV hplot]=simpleTplot(frac_freq',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
+    
+end
+%Aperiodic only
+subplot(1,3,3)
+for nD=1:2
+    temp_data=squeeze(nanmean(all_frac(ismember(all_group,mygroups{nD}),:,this_Ch,:),2));
     [pV hplot]=simpleTplot(frac_freq',temp_data,0,ColorsG(nD,:),0,'-',0.5,1,[],[],2);
 end
 xlabel('Frequency (Hz)')
 ylabel('Power')
 
-
+%%
 cmap3=cbrewer('seq','Blues',32);
 cmap3(cmap3<0)=0; 
 cmap4=cbrewer('seq','Reds',105);
