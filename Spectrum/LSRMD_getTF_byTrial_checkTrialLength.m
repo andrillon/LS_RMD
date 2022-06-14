@@ -57,7 +57,7 @@ for nF=1:length(files)
         load([folder_name filesep file_name]);
         
         
-        fprintf('... found % trials of length %g s\n',length(data.trial),size(data.trial{1},2)/data.fsample)
+        fprintf('... found % trials of length min: %g max: %g s\n',length(data.time),min(cellfun(@length,data.time))/data.fsample,max(cellfun(@length,data.trial))/data.fsample)
     end
 end
 
