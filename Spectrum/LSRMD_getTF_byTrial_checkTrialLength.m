@@ -33,7 +33,7 @@ files=dir([preproc_path filesep 'ICAcleaned_etrial_ft_*.mat']);
 
 %%
 res_mat=[];
-redo=0; complete=0;
+redo=1; complete=0;
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -57,7 +57,7 @@ for nF=1:length(files)
         load([folder_name filesep file_name]);
         
         
-        fprintf('... found % trials of length min: %g max: %g s\n',length(data.time),min(cellfun(@length,data.time))/data.fsample,max(cellfun(@length,data.trial))/data.fsample)
+        fprintf('... found %g trials of length min: %g max: %g s\n',length(data.time),min(cellfun(@length,data.time))/data.fsample,max(cellfun(@length,data.trial))/data.fsample)
     end
 end
 
