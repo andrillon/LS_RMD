@@ -50,7 +50,9 @@ for nF=1:length(files)
     tic;
     fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
     
-    if redo==1 || exist([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat'])==0
+%     if redo==1 || exist([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat'])==0 %Variable window
+    if redo==1 || exist([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat'])==0 %Fixed window
+
         subj_pow=[];
 
         
@@ -90,10 +92,12 @@ for nF=1:length(files)
         cfg.keeptrials   = 'yes';
         TFRhann = ft_freqanalysis(cfg, data);
 
-        save([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat'],'TFRhann','newlabels');
+%         save([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat'],'TFRhann','newlabels'); %Variable window
+        save([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat'],'TFRhann','newlabels'); %Fixed window
         
     else
-        load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat']);
+%         load([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat']); %Variable window
+        load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat']); %Fixed window
     end
 %   
     nFc=nFc+1;
