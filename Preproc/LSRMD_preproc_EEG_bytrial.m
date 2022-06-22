@@ -23,6 +23,9 @@ for nF=1:length(folders)
     these_names={files.name};
     files(find(~(cellfun(@isempty,regexp(these_names,'RS')))))=[];
     SubID=folders(nF).name;
+%     if ~strcmp(SubID,'HN872')
+%         continue;
+%     end
     if isempty(files)
         files=dir([folders(nF).folder filesep folders(nF).name filesep '*.bdf']);
         type_File=2;
@@ -131,11 +134,11 @@ for nF=1:length(folders)
             
             %%% Define epochs
             cfg=[];
-            cfg.trialfun            = 'LS_RMD_trialfun_v2';
+            cfg.trialfun            = 'LS_RMD_trialfun_v3';
             cfg.SubID               = SubID;
             cfg.dataset             = [file_folder filesep file_name];
-            cfg.trialdef.prestim    = 0.7;
-            cfg.trialdef.poststim   = 1.8;
+            cfg.trialdef.prestim    = 1;
+            cfg.trialdef.poststim   = 1;
             cfg.behav               = behav_data;
             cfg.type_File           = type_File;
 %             cfg = ft_definetrial(cfg);
@@ -317,6 +320,7 @@ for nF=1:length(folders)
         if size(table,1)~=length(data.trial)
             warning('NOT THE SAME SIZE BETWEEN DATA AND BEHAV')
         end
+        table.RT((table.RT*hdr.Fs+table.Stat)>table.End)=NaN;
         writetable(table,[preproc_path filesep 'behav_' SubID '.csv']);
         
         cfgerp        = [];
