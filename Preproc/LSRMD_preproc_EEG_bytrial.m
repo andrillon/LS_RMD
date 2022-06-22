@@ -322,7 +322,8 @@ for nF=1:length(folders)
         end
         table.RT((table.RT*hdr.Fs+table.Stat)>table.End)=NaN;
         writetable(table,[preproc_path filesep 'behav_' SubID '.csv']);
-        
+        Duration=(table.End-table.Stat)/hdr.Fs;
+        fprintf('... ... %g trials detected: min duration %g | max duration %g | average duration %g\n',length(Duration),min(Duration),max(Duration),mean(Duration))
         cfgerp        = [];
         cfgerp.trials = 1:length(data.trial);
         av_ERP = ft_timelockanalysis(cfgerp, data);
