@@ -113,13 +113,13 @@ fprintf('Processing %s...',SubID);
                 continue;
             end
             if type_File==1
-                behavfiles=dir([folders(nF).folder filesep folders(nF).name filesep this_file.name(1:end-4) '.mat']);
+                behavfiles=dir([folders(nF).folder filesep 'Behav' filesep this_file.name(1:end-4) '.mat']);
             elseif type_File==2
-                behavfiles=dir([folders(nF).folder filesep folders(nF).name filesep this_file.name(1:end-4) '.mat']);
+                behavfiles=dir([folders(nF).folder filesep 'Behav' filesep this_file.name(1:end-4) '.mat']);
             elseif type_File==3
                 behavfiles=dir([folders(nF).folder filesep '..' filesep 'Behav' filesep SubID '90'  num2str(k) '.mat']);
             elseif type_File==4 || type_File==5
-                behavfiles=dir([folders(nF).folder filesep folders(nF).name filesep this_file.name(1:end-4) '.mat']); %DP 28/07 adding Megan older adult + younger adult data
+                behavfiles=dir([folders(nF).folder filesep 'Behav' filesep this_file.name(1:end-4) '.mat']); %DP 28/07 adding Megan older adult + younger adult data
             end
             file_name = this_file(1).name;
             file_folder = this_file(1).folder;

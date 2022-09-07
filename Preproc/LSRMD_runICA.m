@@ -13,7 +13,8 @@ load(['..' filesep 'LS_RMD_Bad Trials_Channels.mat']);
 
 %% loop on subjects
 redo=1;
-for nF=1:length(files)
+skipped=[]; numskip=1;
+for nF=61:length(files)
     file_name=files(nF).name;
     SubID=file_name(13:end-4);
     fprintf('Processing %s...\n',SubID);
@@ -31,16 +32,20 @@ for nF=1:length(files)
                 badChannels=[];
         eval(['badTrials=[' LSRMDBadTrialsChannels.ExcludedTrials{thisF} '];']);
         eval(['badChannels=[' LSRMDBadTrialsChannels.ExcludedChannels{thisF} '];']);
-        if isempty(badChannels)
-            continue;
-        end
+%         if isempty(badChannels)
+%             continue;
+%         end
         %%% load epoched data
         load([preproc_path filesep 'f_etrial_ft_' SubID]);
         
-        cfg=[];
+        cfg=[]; 
+        if isempty(data)
+            warning(['Skipping ' SubID '... data is empty'])
+            continue;
+        end
         cfg.trials          = setdiff(1:length(data.trial),badTrials);
         data = ft_preprocessing(cfg, data);
-        
+              
         if ~isempty(badChannels)
             fprintf('... ... interpolating %g channels\n',length(badChannels))
             % retrieve layout
