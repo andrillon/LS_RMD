@@ -53,6 +53,8 @@ catch
     evt_values=cell2mat(evt_values);
     possible_values=101:112;
     stim_idx=find(ismember(evt_values,possible_values));
+    
+     offset_idx=find(ismember(evt_values,5));
     all_breaks=[];
     if ~isempty(find(ismember(evt_values,28)))
         %%% discard trials just before a 28
