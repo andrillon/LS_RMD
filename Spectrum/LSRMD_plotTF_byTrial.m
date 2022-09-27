@@ -102,8 +102,8 @@ for nCh=1:length(layout.label)-2
 end
 
 %% Plotting
-faxis=TFRhann.freq
-faxis=faxis(faxis>=min(TFRhann.freq) & faxis<=max(TFRhann.freq));
+faxis=TFRhann.freq;
+faxis=faxis(faxis>=min(TFRhann.freq) & faxis<=max(TFRhann.freq)); % TA: I don't understand why would need this. faxis will be always within its own extrema
 
 channels_to_plot={'Fz','Cz','Pz','Oz'};
 figure; 
@@ -112,8 +112,8 @@ format_fig;
 cmap=cbrewer('seq','YlOrRd',64);
     for nCh=1:length(channels_to_plot)
         hold on;
-        simpleTplot(TFtimes(TFtimes>0 & TFtimes<.650),squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,TFtimes>0 & TFtimes<.650),1),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
-        simpleTplot(TFtimes(TFtimes>0 & TFtimes<.650),squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,TFtimes>0 & TFtimes<.650),1),3)),0,cmap(nCh+30,:),[0],'-',0.1,1,0,1,1);
+        simpleTplot(TFtimes,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,:),2),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+        simpleTplot(TFtimes,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,:),2),3)),0,cmap(nCh+30,:),[0],'-',0.1,1,0,1,1);
     end
 % xlim([0 1])
 % ylim([-.7 2])
