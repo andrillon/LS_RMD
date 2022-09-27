@@ -50,53 +50,45 @@ for nF=1:length(files)
     tic;
     fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
     
-    %     if redo==1 || exist([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat'])==0 %Variable window
-    if exist([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat'])==0 %Fixed window
-        
-        
-        %         load([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat']); %Variable window
-        load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat']); %Fixed window
-        %
-        nFc=nFc+1;
-        TFRhann.powspctrm=TFRhann.powspctrm-repmat(mean(TFRhann.powspctrm(:,:,:,TFRhann.time<0),4),[1 1 1 length(TFRhann.time)]);
-        all_TFRhann(nFc,:,:,:)=squeeze(mean(loag10(TFRhann.powspctrm(:,:,:,:)),1));
-        %     if exist('subj_osci')~=0
-        %         all_osci(nFc,:,:,:)=subj_osci;
-        %     end
-        %     if exist('subj_mixed')~=0
-        %         all_mixed(nFc,:,:,:)=subj_mixed;
-        %     end
-        %     if exist('subj_frac')~=0
-        %         all_frac(nFc,:,:,:)=subj_frac;
-        %     end
-        %
-        %
-        if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
-            thisgroup=2;
-            thisagegroup=1;
-        elseif length(SubID)==7 % YOUNG (MONASH) - DOWN 50%COH
-            thisgroup=1;
-            thisagegroup=0;
-        elseif length(SubID)==11 % YOUNG (TRINITY) - DOWN 50%COH
-            thisgroup=3;
-            thisagegroup=0;
-        elseif length(SubID)==5 && SubID(3)=='8' % YOUNG - UP & DOWN 90%COH
-            thisgroup=4;
-            thisagegroup=0;
-        elseif length(SubID)==5 && SubID(3)=='9'% OLD - UP & DOWN 90%COH
-            thisgroup=5;
-            thisagegroup=1;
-        else
-            thisgroup=NaN;
-            thisagegroup=NaN;
-        end
-        all_group(nFc)=thisgroup; % STORE HERE THE INFO ABOUT THE GROUP
-        all_agegroup(nFc)=thisagegroup; % STORE HERE THE INFO ABOUT THE AGE GROUP
-        %     %     save([powerspec_path filesep 'cohorts_FFT_perBlock_byElec_ICAcleaned.mat'],'YoungM_pow','YoungM_SNR','YoungM_SNRtag','YoungT_pow','YoungT_SNR','YoungT_SNRtag','YoungHN_pow','YoungHN_SNR','YoungHN_SNRtag',...
-        %     %          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
+    load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat']); %Fixed window
+    %
+    nFc=nFc+1;
+    TFRhann.powspctrm_log=log10(TFRhann.powspctrm);
+    TFRhann.powspctrm_bsl=TFRhann.powspctrm_log-repmat(nanmean(TFRhann.powspctrm_log(:,:,:,TFRhann.time<0),4),[1 1 1 length(TFRhann.time)]);
+    temp_powspctrm_bsl=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));
+    if size(temp_powspctrm_bsl,3)>39
+        temp_powspctrm_bsl=temp_powspctrm_bsl(:,:,2:end-1);
+        warning('More than expected time points - removing first and last');
     end
+    all_TFRhann(nFc,:,:,:)=temp_powspctrm_bsl;
+    %     all_TFRhann(nFc,:,:,:)=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));
+    TFtimes=TFRhann.time(TFRhann.time>-0.5 & TFRhann.time<1.5);
+    
+    
+    if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
+        thisgroup=2;
+        thisagegroup=1;
+    elseif length(SubID)==7 % YOUNG (MONASH) - DOWN 50%COH
+        thisgroup=1;
+        thisagegroup=2;
+    elseif length(SubID)==11 % YOUNG (TRINITY) - DOWN 50%COH
+        thisgroup=3;
+        thisagegroup=2;
+    elseif length(SubID)==5 && SubID(3)=='8' % YOUNG - UP & DOWN 90%COH
+        thisgroup=4;
+        thisagegroup=0;
+    elseif length(SubID)==5 && SubID(3)=='9'% OLD - UP & DOWN 90%COH
+        thisgroup=5;
+        thisagegroup=1;
+    else
+        thisgroup=NaN;
+        thisagegroup=NaN;
+    end
+    all_group(nFc)=thisgroup; % STORE HERE THE INFO ABOUT THE GROUP
+    all_agegroup(nFc)=thisagegroup; % STORE HERE THE INFO ABOUT THE AGE GROUP
+    %     %     save([powerspec_path filesep 'cohorts_FFT_perBlock_byElec_ICAcleaned.mat'],'YoungM_pow','YoungM_SNR','YoungM_SNRtag','YoungT_pow','YoungT_SNR','YoungT_SNRtag','YoungHN_pow','YoungHN_SNR','YoungHN_SNRtag',...
+    %     %          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
 end
-% save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'all_pow','all_group','all_agegroup');
 
 %% Topographies 25Hz tag
 cfg = [];
@@ -109,4 +101,21 @@ for nCh=1:length(layout.label)-2
     correspCh(nCh)=match_str(newlabels,layout.label(nCh));
 end
 
+%% Plotting
+faxis=TFRhann.freq
+faxis=faxis(faxis>=min(TFRhann.freq) & faxis<=max(TFRhann.freq));
 
+channels_to_plot={'Fz','Cz','Pz','Oz'};
+figure; 
+set(gcf,'Position',[ 2104         115         788         574]);
+format_fig;
+cmap=cbrewer('seq','YlOrRd',64);
+    for nCh=1:length(channels_to_plot)
+        hold on;
+        simpleTplot(TFtimes(TFtimes>0 & TFtimes<.650),squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,TFtimes>0 & TFtimes<.650),1),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+        simpleTplot(TFtimes(TFtimes>0 & TFtimes<.650),squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,TFtimes>0 & TFtimes<.650),1),3)),0,cmap(nCh+30,:),[0],'-',0.1,1,0,1,1);
+    end
+% xlim([0 1])
+% ylim([-.7 2])
+xlabel('Time')
+ylabel('Power')
