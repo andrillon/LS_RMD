@@ -35,10 +35,6 @@ for nF=1:length(files)
 
         
         load([folder_name filesep file_name]);
-        behav_table=readtable([folder_name filesep 'behav_' file_name(findstr(file_name,'ft_')+3:end-4) '.csv']);
-        if size(behav_table,1)~=length(data.trial)
-            error('different trial number in EEG and behav data')
-        end
         
         % fix channel names
         mylabels=data.label;
@@ -57,34 +53,19 @@ for nF=1:length(files)
         
         fprintf('%2.0f-%2.0f\n',0,0)
 
-        % remove NaN values
-        cfg=[];
-        cfg.trials=find(~isnan(behav_table.RT));
-        data=ft_redefinetrial(cfg,data);
-        
-        % re-locking
-        cfg=[];
-        cfg.offset =-round(behav_table.RT(~isnan(behav_table.RT))*data.fsample);
-        data_rlock=ft_redefinetrial(cfg,data);
-        
         % crop trials
         cfg=[];
-        cfg.toilim =[-1 1];
-        data_rlock=ft_redefinetrial(cfg,data_rlock);
-        
+        cfg.toilim =[-0.5 3.5];
+        data=ft_redefinetrial(cfg,data);
         
         % estimate the ERP
         tlck = ft_timelockanalysis([],data);
-        figure; subplot(1,2,1); plot(tlck.time, tlck.avg);% legend(tlck.label);
-        rlck = ft_timelockanalysis([],data_rlock);
-        hold on; subplot(1,2,2); plot(rlck.time, rlck.avg);% legend(tlck.label);
+        figure; plot(tlck.time, tlck.avg); legend(tlck.label);
         
         % subtract the ERP from the data
         data_minus_erp = data;
-        data_rlock_minus_erp = data_rlock;
         for k = 1:numel(data.trial)
             data_minus_erp.trial{k} = data.trial{k} - tlck.avg(:,1:length(data.trial{k}));
-            data_rlock_minus_erp.trial{k} = data_rlock.trial{k} - rlck.avg(:,1:length(data_rlock.trial{k}));
         end
         
         % get the TF decomposition
@@ -95,54 +76,30 @@ for nF=1:length(files)
         cfg.foi          = 2:0.5:30;                         % analysis 2 to 30 Hz in steps of 2 Hz
         cfg.t_ftimwin    = ones(length(cfg.foi),1).*0.5;   % length of time window = 0.5 sec
 %         cfg.t_ftimwin    = 2./cfg.foi;   % 2 cycles per time window
-        cfg.keeptrials   = 'yes';
         cfg.toi          = -1.0:0.05:3.5;                  % time window "slides" from -0.5 to 1.5 sec in steps of 0.05 sec (50 ms)
+        cfg.keeptrials   = 'yes';
         TFRhann_induced = ft_freqanalysis(cfg, data_minus_erp);
-        
-        cfg.toi          = -1.0:0.05:1;                  % time window "slides" from -0.5 to 1.5 sec in steps of 0.05 sec (50 ms)
-        TFRhann_rlock_induced = ft_freqanalysis(cfg, data_rlock_minus_erp);
-        
-        TFRhann_induced.powspctrm_log=log10(TFRhann_induced.powspctrm);
-        TFRhann_rlock_induced.powspctrm_log=log10(TFRhann_rlock_induced.powspctrm);
-        TFRhann_rlock_induced.powspctrm_bsl=TFRhann_rlock_induced.powspctrm_log-repmat(nanmean(TFRhann_induced.powspctrm_log(:,:,:,TFRhann_induced.time<0),4),[1 1 1 length(TFRhann_rlock_induced.time)]);
-%         temp_powspctrm_bsl=squeeze(nanmean((TFRhann_induced.powspctrm_bsl(:,:,:,TFRhann_induced.time>-0.5 & TFRhann_induced.time<1.5)),1));
-%         if size(temp_powspctrm_bsl,3)>39
-%             temp_powspctrm_bsl=temp_powspctrm_bsl(:,:,2:end-1);
-%             warning('More than expected time points - removing first and last');
-%         end
-        
-        
-        
-        %         save([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat'],'TFRhann','newlabels'); %Variable window
-        save([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_RespLocked_ERPremoved.mat'],'TFRhann_rlock_induced','newlabels'); %Fixed window
-        
-        %%%% evoked + induced
-       cfg.toi          = -1.0:0.05:3.5;                  % time window "slides" from -0.5 to 1.5 sec in steps of 0.05 sec (50 ms)
-        TFRhann = ft_freqanalysis(cfg, data);
-        
-        cfg.toi          = -1.0:0.05:1;                  % time window "slides" from -0.5 to 1.5 sec in steps of 0.05 sec (50 ms)
-        TFRhann_rlock = ft_freqanalysis(cfg, data_rlock);
-        
-        TFRhann.powspctrm_log=log10(TFRhann.powspctrm);
-        TFRhann_rlock.powspctrm_log=log10(TFRhann_rlock.powspctrm);
-        TFRhann_rlock.powspctrm_bsl=TFRhann_rlock.powspctrm_log-repmat(nanmean(TFRhann.powspctrm_log(:,:,:,TFRhann.time<0),4),[1 1 1 length(TFRhann_rlock.time)]);
-%         temp_powspctrm_bsl=squeeze(nanmean((TFRhann_induced.powspctrm_bsl(:,:,:,TFRhann_induced.time>-0.5 & TFRhann_induced.time<1.5)),1));
 
-        
-        %         save([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat'],'TFRhann','newlabels'); %Variable window
-        save([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_RespLocked.mat'],'TFRhann_rlock','newlabels'); %Fixed window
+%         save([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat'],'TFRhann','newlabels'); %Variable window
+        save([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_ERPremoved.mat'],'TFRhann_induced','newlabels'); %Fixed window
         
     else
 %         load([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat']); %Variable window
-        load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_RespLocked_ERPremoved.mat']); %Fixed window
+        load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_ERPremoved.mat']); %Fixed window
     end
 %   
 
     nFc=nFc+1;
-    
-%     all_TFRhann_induced(nFc,:,:,:)=temp_powspctrm_bsl;
+    TFRhann_induced.powspctrm_log=log10(TFRhann_induced.powspctrm);
+    TFRhann_induced.powspctrm_bsl=TFRhann_induced.powspctrm_log-repmat(nanmean(TFRhann_induced.powspctrm_log(:,:,:,TFRhann_induced.time<0),4),[1 1 1 length(TFRhann_induced.time)]);
+    temp_powspctrm_bsl=squeeze(nanmean((TFRhann_induced.powspctrm_bsl(:,:,:,TFRhann_induced.time>-0.5 & TFRhann_induced.time<1.5)),1));
+    if size(temp_powspctrm_bsl,3)>39
+        temp_powspctrm_bsl=temp_powspctrm_bsl(:,:,2:end-1);
+        warning('More than expected time points - removing first and last');
+    end
+    all_TFRhann_induced(nFc,:,:,:)=temp_powspctrm_bsl;
 %     all_TFRhann(nFc,:,:,:)=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));
-%     TFtimes=TFRhann_induced.time(TFRhann_induced.time>-0.5 & TFRhann_induced.time<1.5);
+    TFtimes=TFRhann_induced.time(TFRhann_induced.time>-0.5 & TFRhann_induced.time<1.5);
 % if exist('subj_osci')~=0
 %         all_osci(nFc,:,:,:)=subj_osci;
 %     end
