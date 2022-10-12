@@ -33,7 +33,7 @@ files=dir([preproc_path filesep 'ICAcleaned_etrial_ft_*.mat']);
 
 %%
 res_mat=[];
-redo=0; complete=0;
+redo=1; complete=0;
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -51,7 +51,7 @@ for nF=1:length(files)
     fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
     
 %     if redo==1 || exist([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat'])==0 %Variable window
-    if redo==1 || exist([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat'])==0 %Fixed window
+    if redo==1 || exist([preproc_path SubID '_TF_perTrial_ICAcleaned.mat'])==0 %Fixed window
 
         subj_pow=[];
 
@@ -88,7 +88,7 @@ for nF=1:length(files)
         cfg.foi          = 2:0.5:30;                         % analysis 2 to 30 Hz in steps of 2 Hz
         cfg.t_ftimwin    = ones(length(cfg.foi),1).*0.5;   % length of time window = 0.5 sec
 %         cfg.t_ftimwin    = 2./cfg.foi;   % 2 cycles per time window
-        cfg.toi          = -0.5:0.05:3.5;                  % time window "slides" from -0.5 to 1.5 sec in steps of 0.05 sec (50 ms)
+        cfg.toi          = -1.0:0.05:3.5;                  % time window "slides" from -0.5 to 1.5 sec in steps of 0.05 sec (50 ms)
         cfg.keeptrials   = 'yes';
         TFRhann = ft_freqanalysis(cfg, data);
 
