@@ -206,8 +206,7 @@ ylabel('Power')
 title('Delta Power - Young 90% vs Old 90%','FontSize',10)
 legend('Young Oz','Old Oz','Location','eastoutside');
 
-
-%% Theta
+%Theta
 f2=figure;
 set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
@@ -319,93 +318,275 @@ legend('Young Oz','Old Oz','Location','eastoutside');
 %% Plotting - Frequency
 faxis=TFRhann.freq;
 
-channels_to_plot={'Fz','Cz','Pz','Oz'};
-%0-200ms
+% channels_to_plot={'Fz','Cz','Pz','Oz'};
+channels_to_plot={'Pz'};
+
+%0-100ms
 f1=figure;
 set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
 cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
+
 for nCh=1:length(channels_to_plot)
     hold on;
-    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>0 & TFtimes <.30),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>0 & TFtimes <.30),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.30 & TFtimes <.70),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.30 & TFtimes <.70),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.30 & TFtimes <.70),2),4));
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.30 & TFtimes <.70),2),4))];
+    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,faxis,'full');
+    for j=1:realpos.nclusters
+        plot(faxis(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+    end
 end
 % xlim([0 1])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
 ylabel('Power')
-title('0-200ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
-legend('Young Fz','Old Fz','Young Cz','Old Cz','Young Pz','Old Pz','Young Oz','Old Oz','Location','eastoutside');
+title('300-700ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
+legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
 
-%200-400ms
+%100-200ms
 f2=figure;
 set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
 cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
+
 for nCh=1:length(channels_to_plot)
     hold on;
-    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.20 & TFtimes <.40),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.20 & TFtimes <.40),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.10 & TFtimes <.20),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.10 & TFtimes <.20),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.10 & TFtimes <.20),2),4));
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.10 & TFtimes <.20),2),4))];
+    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,faxis,'full');
+    for j=1:realpos.nclusters
+        plot(faxis(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+    end
 end
 % xlim([0 1])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
 ylabel('Power')
-title('200-400ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
-legend('Young Fz','Old Fz','Young Cz','Old Cz','Young Pz','Old Pz','Young Oz','Old Oz','Location','eastoutside');
+title('100-200ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
+legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
 
-%400-600ms
+%200-300ms
 f3=figure;
 set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
 cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
+
 for nCh=1:length(channels_to_plot)
     hold on;
-    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.40 & TFtimes <.60),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.40 & TFtimes <.60),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.20 & TFtimes <.30),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.20 & TFtimes <.30),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.20 & TFtimes <.30),2),4));
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.20 & TFtimes <.30),2),4))];
+    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,faxis,'full');
+    for j=1:realpos.nclusters
+        plot(faxis(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+    end
 end
 % xlim([0 1])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
 ylabel('Power')
-title('400-600ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
-legend('Young Fz','Old Fz','Young Cz','Old Cz','Young Pz','Old Pz','Young Oz','Old Oz','Location','eastoutside');
+title('200-300ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
+legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
 
-%600-800ms
+%300-400ms
 f4=figure;
 set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
 cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
+
 for nCh=1:length(channels_to_plot)
     hold on;
-    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.60 & TFtimes <.80),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.60 & TFtimes <.80),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.30 & TFtimes <.40),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.30 & TFtimes <.40),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.30 & TFtimes <.40),2),4));
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.30 & TFtimes <.40),2),4))];
+    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,faxis,'full');
+    for j=1:realpos.nclusters
+        plot(faxis(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+    end
 end
 % xlim([0 1])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
 ylabel('Power')
-title('600-800ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
-legend('Young Fz','Old Fz','Young Cz','Old Cz','Young Pz','Old Pz','Young Oz','Old Oz','Location','eastoutside');
+title('300-400ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
+legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
 
-%800-1000ms
+%400-500ms
 f5=figure;
 set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
 cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
+
 for nCh=1:length(channels_to_plot)
     hold on;
-    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.80 & TFtimes <1.0),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.80 & TFtimes <1.0),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.40 & TFtimes <.50),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.40 & TFtimes <.50),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.40 & TFtimes <.50),2),4));
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.40 & TFtimes <.50),2),4))];
+    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,faxis,'full');
+    for j=1:realpos.nclusters
+        plot(faxis(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+    end
 end
 % xlim([0 1])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
 ylabel('Power')
-title('800-1000ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
-legend('Young Fz','Old Fz','Young Cz','Old Cz','Young Pz','Old Pz','Young Oz','Old Oz','Location','eastoutside');
+title('400-500ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
+legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
+
+%500-600ms
+f6=figure;
+set(gcf,'Position',[ 2104         115         788         574]);
+format_fig;
+cmap=cbrewer('seq','Blues',5);
+cmap2=cbrewer('seq','Oranges',5);
+
+for nCh=1:length(channels_to_plot)
+    hold on;
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.50 & TFtimes <.60),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.50 & TFtimes <.60),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.50 & TFtimes <.60),2),4));
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.50 & TFtimes <.60),2),4))];
+    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,faxis,'full');
+    for j=1:realpos.nclusters
+        plot(faxis(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+    end
+end
+% xlim([0 1])
+% ylim([-.7 2])
+xlabel('Frequency (Hz)')
+ylabel('Power')
+title('500-600ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
+legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
+
+%600-700ms
+f7=figure;
+set(gcf,'Position',[ 2104         115         788         574]);
+format_fig;
+cmap=cbrewer('seq','Blues',5);
+cmap2=cbrewer('seq','Oranges',5);
+
+for nCh=1:length(channels_to_plot)
+    hold on;
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.60 & TFtimes <.70),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.60 & TFtimes <.70),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.60 & TFtimes <.70),2),4));
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.60 & TFtimes <.70),2),4))];
+    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,faxis,'full');
+    for j=1:realpos.nclusters
+        plot(faxis(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+    end
+end
+% xlim([0 1])
+% ylim([-.7 2])
+xlabel('Frequency (Hz)')
+ylabel('Power')
+title('600-700ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
+legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
+
+%700-800ms
+f8=figure;
+set(gcf,'Position',[ 2104         115         788         574]);
+format_fig;
+cmap=cbrewer('seq','Blues',5);
+cmap2=cbrewer('seq','Oranges',5);
+
+for nCh=1:length(channels_to_plot)
+    hold on;
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.70 & TFtimes <.80),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.70 & TFtimes <.80),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.70 & TFtimes <.80),2),4));
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.70 & TFtimes <.80),2),4))];
+    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,faxis,'full');
+    for j=1:realpos.nclusters
+        plot(faxis(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+    end
+end
+% xlim([0 1])
+% ylim([-.7 2])
+xlabel('Frequency (Hz)')
+ylabel('Power')
+title('700-800ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
+legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
+
+%800-900ms
+f9=figure;
+set(gcf,'Position',[ 2104         115         788         574]);
+format_fig;
+cmap=cbrewer('seq','Blues',5);
+cmap2=cbrewer('seq','Oranges',5);
+
+for nCh=1:length(channels_to_plot)
+    hold on;
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.80 & TFtimes <.90),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.80 & TFtimes <.90),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.80 & TFtimes <.90),2),4));
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.80 & TFtimes <.90),2),4))];
+    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,faxis,'full');
+    for j=1:realpos.nclusters
+        plot(faxis(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+    end
+end
+% xlim([0 1])
+% ylim([-.7 2])
+xlabel('Frequency (Hz)')
+ylabel('Power')
+title('800-900ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
+legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
+
+%900-100ms
+f10=figure;
+set(gcf,'Position',[ 2104         115         788         574]);
+format_fig;
+cmap=cbrewer('seq','Blues',5);
+cmap2=cbrewer('seq','Oranges',5);
+
+for nCh=1:length(channels_to_plot)
+    hold on;
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.90 & TFtimes <1.0),2),4)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(faxis,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.90 & TFtimes <1.0),2),4)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.90 & TFtimes <1.0),2),4));
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),:,TFtimes>.90 & TFtimes <1.0),2),4))];
+    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,faxis,'full');
+    for j=1:realpos.nclusters
+        plot(faxis(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+    end
+end
+% xlim([0 1])
+% ylim([-.7 2])
+xlabel('Frequency (Hz)')
+ylabel('Power')
+title('900-1000ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
+legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
