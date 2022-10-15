@@ -15,11 +15,13 @@ files=dir([preproc_path filesep 'ICAcleaned_etrial_ft_*.mat']);
 
 %%
 res_mat=[];
-redo=1; complete=0;
+redo=0; complete=0;
 
 absThr=250;
 nFc=0;
-for nF=1:length(files)
+n_rlockerror=0; nE=0; rlockerrors=[];
+
+for nF=80:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
     SubID=file_name(1:end-4);
@@ -29,7 +31,7 @@ for nF=1:length(files)
     fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
     
 %     if redo==1 || exist([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat'])==0 %Variable window
-    if redo==1 || exist([preproc_path SubID '_TF_perTrial_ICAcleaned.mat'])==0 %Fixed window
+    if redo==1 || exist([preproc_path SubID '_TF_perTrial_ICAcleaned_RespLocked_ERPremoved.mat'])==0 %Fixed window
 
         subj_pow=[];
 
@@ -84,7 +86,15 @@ for nF=1:length(files)
         data_rlock_minus_erp = data_rlock;
         for k = 1:numel(data.trial)
             data_minus_erp.trial{k} = data.trial{k} - tlck.avg(:,1:length(data.trial{k}));
-            data_rlock_minus_erp.trial{k} = data_rlock.trial{k} - rlck.avg(:,1:length(data_rlock.trial{k}));
+            try
+                data_rlock_minus_erp.trial{k} = data_rlock.trial{k} - rlck.avg(:,1:length(data_rlock.trial{k}));
+            catch
+                warning(['!!! Matrix dimensions do not agree - ' SubID])
+                n_rlockerror=n_rlockerror+1;
+                nE=nE+1;
+                rlockerrors{nE}=SubID;
+                continue
+            end
         end
         
         % get the TF decomposition
