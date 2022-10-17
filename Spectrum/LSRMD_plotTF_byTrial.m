@@ -34,6 +34,7 @@ files=dir([preproc_path filesep 'ICAcleaned_etrial_ft_*.mat']);
 %%
 res_mat=[];
 redo=0; complete=0;
+datatype=2; %0 = evoked, stim locked; 1 = evoked, resp locked; 2 = induced, resp locked
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -54,20 +55,33 @@ for nF=80:length(files)
     tic;
     fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
     
-    load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned.mat']); %Fixed window
-    %
-    nFc=nFc+1;
-    TFRhann.powspctrm_log=log10(TFRhann.powspctrm);
-    TFRhann.powspctrm_bsl=TFRhann.powspctrm_log-repmat(nanmean(TFRhann.powspctrm_log(:,:,:,TFRhann.time<0),4),[1 1 1 length(TFRhann.time)]);
-    temp_powspctrm_bsl=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));
-    if size(temp_powspctrm_bsl,3)>39
-        temp_powspctrm_bsl=temp_powspctrm_bsl(:,:,2:end-1);
-        warning('More than expected time points - removing first and last');
+    if datatype==0 %evoked, stim locked
+        load([preproc_path SubID '_TF_perTrial_ICAcleaned.mat']); %Fixed window
+        nFc=nFc+1;
+        TFRhann.powspctrm_log=log10(TFRhann.powspctrm);
+        TFRhann.powspctrm_bsl=TFRhann.powspctrm_log-repmat(nanmean(TFRhann.powspctrm_log(:,:,:,TFRhann.time<0),4),[1 1 1 length(TFRhann.time)]);
+        temp_powspctrm_bsl=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));
+        if size(temp_powspctrm_bsl,3)>39
+            temp_powspctrm_bsl=temp_powspctrm_bsl(:,:,2:end-1);
+            warning('More than expected time points - removing first and last');
+        end
+        all_TFRhann(nFc,:,:,:)=temp_powspctrm_bsl;
+        %     all_TFRhann(nFc,:,:,:)=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));
+        TFtimes=TFRhann.time(TFRhann.time>-0.5 & TFRhann.time<1.5);
+        faxis=TFRhann.freq;
+    elseif datatype==1 % evoked, resp locked
+        load([preproc_path SubID '_TF_perTrial_ICAcleaned_RespLocked.mat']); %Fixed window
+        nFc=nFc+1;
+        all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_rlock.powspctrm_bsl,1));
+        TFtimes=TFRhann_rlock.time;
+        faxis=TFRhann_rlock.freq;
+    elseif datatype==2 % induced, resp locked
+        load([preproc_path SubID '_TF_perTrial_ICAcleaned_RespLocked_ERPremoved.mat']); %Fixed window
+        nFc=nFc+1;
+        all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_rlock_induced.powspctrm_bsl,1));
+        TFtimes=TFRhann_rlock_induced.time;
+        faxis=TFRhann_rlock_induced.freq;
     end
-    all_TFRhann(nFc,:,:,:)=temp_powspctrm_bsl;
-    %     all_TFRhann(nFc,:,:,:)=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));
-    TFtimes=TFRhann.time(TFRhann.time>-0.5 & TFRhann.time<1.5);
-    
     
     if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
         thisgroup=2;
@@ -93,15 +107,15 @@ for nF=80:length(files)
     end
     all_group(nFc)=thisgroup; % STORE HERE THE INFO ABOUT THE GROUP
     all_agegroup(nFc)=thisagegroup; % STORE HERE THE INFO ABOUT THE AGE GROUP
-    if thisagegroup==0
-        count_y=count_y+1;
-        TFRhann.powspctrm=TFRhann.powspctrm_bsl;
-        data_young{count_y}=TFRhann;
-    elseif thisagegroup==1
-        count_o=count_o+1;
-        TFRhann.powspctrm=TFRhann.powspctrm_bsl;
-        data_old{count_o}=TFRhann;
-    end
+%     if thisagegroup==0
+%         count_y=count_y+1;
+%         TFRhann.powspctrm=TFRhann.powspctrm_bsl;
+%         data_young{count_y}=TFRhann;
+%     elseif thisagegroup==1
+%         count_o=count_o+1;
+%         TFRhann.powspctrm=TFRhann.powspctrm_bsl;
+%         data_old{count_o}=TFRhann;
+%     end
     %     %     save([powerspec_path filesep 'cohorts_FFT_perBlock_byElec_ICAcleaned.mat'],'YoungM_pow','YoungM_SNR','YoungM_SNRtag','YoungT_pow','YoungT_SNR','YoungT_SNRtag','YoungHN_pow','YoungHN_SNR','YoungHN_SNRtag',...
     %     %          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
 end
@@ -109,7 +123,13 @@ end
 %%
 cfg = [];
 cfg.layout = 'biosemi64.lay';
-cfg.channel=TFRhann.label;
+if datatype==0
+    cfg.channel=TFRhann.label;
+elseif datatype==1
+    cfg.channel=TFRhann_rlock.label;
+elseif datatype==2
+    cfg.channel=TFRhann_rlock_induced.label;
+end
 cfg.center      = 'yes';
 layout=ft_prepare_layout(cfg);
 
@@ -174,7 +194,13 @@ for nCh=1:length(layout.label)-2
 end
 
 %% Plotting - Time
-faxis=TFRhann.freq;
+if datatype==0
+    all_TFRhann=all_TFRhann(:,:,:,TFtimes>0 & TFtimes<1.5);
+    TFwindow=TFtimes(TFtimes>0);
+else
+    TFwindow=TFtimes;
+end
+% faxis=TFRhann.freq;
 
 % channels_to_plot={'Fz','Cz','Pz','Oz'};
 channels_to_plot={'Oz'};
@@ -186,16 +212,18 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
     hold on;
-    simpleTplot(TFtimes(TFtimes>0),squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,TFtimes>0),2),3)),0,cmap(nCh+1,:),[0],'-',0.5,1,0,0,1);
-    simpleTplot(TFtimes(TFtimes>0),squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,TFtimes>0),2),3)),0,cmap2(nCh+1,:),[0],'-',0.5,1,0,0,1);
+    simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,:),2),3)),0,cmap(nCh+1,:),[0],'-',0.5,1,0,0,1);
+    simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,:),2),3)),0,cmap2(nCh+1,:),[0],'-',0.5,1,0,0,1);
+%     simpleTplot(TFtimes(TFtimes>0),squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,TFtimes>0),2),3)),0,cmap(nCh+1,:),[0],'-',0.5,1,0,0,1);
+%     simpleTplot(TFtimes(TFtimes>0),squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,TFtimes>0),2),3)),0,cmap2(nCh+1,:),[0],'-',0.5,1,0,0,1);
     fprintf('... ... running stats  on %s\n',channels_to_plot{nCh})
     %%%% Stats diff delta
-    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,TFtimes>0),2),3)) ;
-        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,TFtimes>0),2),3))];
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,:),2),3)) ;
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,:),2),3))];
     group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
-    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFtimes(TFtimes>0),'full');
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFwindow,'full');
     for j=1:realpos.nclusters
-        xTime=TFtimes(TFtimes>0);
+        xTime=TFwindow;
         plot(xTime(realpos.clusters==realpos.nclusters(j)),zeros(1,sum(realpos.clusters==realpos.nclusters(j))),'Color','k');
     end
 end
@@ -214,15 +242,15 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
     hold on;
-    simpleTplot(TFtimes(TFtimes>0),squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,TFtimes>0),2),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    simpleTplot(TFtimes(TFtimes>0),squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,TFtimes>0),2),3)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,:),2),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,:),2),3)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
     
-    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,TFtimes>0),2),3)) ;
-        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,TFtimes>0),2),3))];
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,:),2),3)) ;
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>4 & faxis<8,:),2),3))];
     group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
-    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFtimes(TFtimes>0),'full');
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFwindow,'full');
     for j=1:realpos.nclusters
-        xTime=TFtimes(TFtimes>0);
+        xTime=TFwindow;
 %         plot(xTime(realpos.clusters==realpos.nclusters(j)),zeros(1,sum(realpos.clusters==realpos.nclusters(j))),'Color','k');
         plot(xTime(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
 
@@ -244,15 +272,15 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
     hold on;
-    simpleTplot(TFtimes,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>8 & faxis<11,:),2),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    simpleTplot(TFtimes,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>8 & faxis<11,:),2),3)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>8 & faxis<11,:),2),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>8 & faxis<11,:),2),3)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
     
-    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>8 & faxis<11,TFtimes>0),2),3)) ;
-        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>8 & faxis<11,TFtimes>0),2),3))];
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>8 & faxis<11,:),2),3)) ;
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>8 & faxis<11,:),2),3))];
     group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
-    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFtimes(TFtimes>0),'full');
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFwindow,'full');
     for j=1:realpos.nclusters
-        xTime=TFtimes(TFtimes>0);
+        xTime=TFwindow;
         plot(xTime(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
     end
 end
@@ -271,14 +299,14 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
     hold on;
-    simpleTplot(TFtimes,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    simpleTplot(TFtimes,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,TFtimes>0),2),3)) ;
-        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,TFtimes>0),2),3))];
+    simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3)) ;
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3))];
     group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
-    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFtimes(TFtimes>0),'full');
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFwindow,'full');
     for j=1:realpos.nclusters
-        xTime=TFtimes(TFtimes>0);
+        xTime=TFwindow;
         plot(xTime(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
     end
 end
@@ -297,14 +325,14 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
     hold on;
-    simpleTplot(TFtimes,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>16 & faxis<29,:),2),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    simpleTplot(TFtimes,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>16 & faxis<29,:),2),3)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>16 & faxis<29,TFtimes>0),2),3)) ;
-        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>16 & faxis<29,TFtimes>0),2),3))];
+    simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>16 & faxis<29,:),2),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>16 & faxis<29,:),2),3)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
+    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>16 & faxis<29,:),2),3)) ;
+        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>16 & faxis<29,:),2),3))];
     group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
-    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFtimes(TFtimes>0),'full');
+    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFwindow,'full');
     for j=1:realpos.nclusters
-        xTime=TFtimes(TFtimes>0);
+        xTime=TFwindow;
         plot(xTime(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
     end
 end
@@ -316,7 +344,7 @@ title('Beta Power - Young 90% vs Old 90%','FontSize',10)
 legend('Young Oz','Old Oz','Location','eastoutside');
 
 %% Plotting - Frequency
-faxis=TFRhann.freq;
+% faxis=TFRhann.freq;
 
 % channels_to_plot={'Fz','Cz','Pz','Oz'};
 channels_to_plot={'Pz'};
