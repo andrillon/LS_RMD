@@ -193,17 +193,19 @@ for nCh=1:length(layout.label)-2
     correspCh(nCh)=match_str(newlabels,layout.label(nCh));
 end
 
-%% Plotting - Time
+%% Trimming Window
 if datatype==0
-    all_TFRhann=all_TFRhann(:,:,:,TFtimes>0 & TFtimes<1.5);
-    TFwindow=TFtimes(TFtimes>0);
+    all_TFRhann=all_TFRhann(:,:,:,TFtimes>=0 & TFtimes<=1.5);
+    TFwindow=TFtimes(TFtimes>=0);
 else
-    TFwindow=TFtimes;
+    all_TFRhann=all_TFRhann(:,:,:,TFtimes<=0.50);
+    TFwindow=TFtimes(TFtimes<=0.50);
 end
 % faxis=TFRhann.freq;
 
+%% Plotting - Time
 % channels_to_plot={'Fz','Cz','Pz','Oz'};
-channels_to_plot={'Oz'};
+channels_to_plot={'Fz'};
 %Delta
 f1=figure;
 set(gcf,'Position',[ 2104         115         788         574]);
@@ -232,7 +234,7 @@ end
 xlabel('Time (s)')
 ylabel('Power')
 title('Delta Power - Young 90% vs Old 90%','FontSize',10)
-legend('Young Oz','Old Oz','Location','eastoutside');
+legend(['Young ' channels_to_plot{nCh}],['Old ' channels_to_plot{nCh}],'Location','eastoutside');
 
 %Theta
 f2=figure;
@@ -262,7 +264,7 @@ end
 xlabel('Time (s)')
 ylabel('Power')
 title('Theta Power - Young 90% vs Old 90%','FontSize',10)
-legend('Young Oz','Old Oz','Location','eastoutside');
+legend(['Young ' channels_to_plot{nCh}],['Old ' channels_to_plot{nCh}],'Location','eastoutside');
 
 %Alpha
 f3=figure;
@@ -289,7 +291,7 @@ end
 xlabel('Time (s)')
 ylabel('Power')
 title('Alpha Power - Young 90% vs Old 90%','FontSize',10)
-legend('Young Oz','Old Oz','Location','eastoutside');
+legend(['Young ' channels_to_plot{nCh}],['Old ' channels_to_plot{nCh}],'Location','eastoutside');
 
 %Mu
 f4=figure;
@@ -315,7 +317,7 @@ end
 xlabel('Time (s)')
 ylabel('Power')
 title('Mu Power - Young 90% vs Old 90%','FontSize',10)
-legend('Young Oz','Old Oz','Location','eastoutside');
+legend(['Young ' channels_to_plot{nCh}],['Old ' channels_to_plot{nCh}],'Location','eastoutside');
 
 %Beta
 f5=figure;
@@ -341,7 +343,7 @@ end
 xlabel('Time (s)')
 ylabel('Power')
 title('Beta Power - Young 90% vs Old 90%','FontSize',10)
-legend('Young Oz','Old Oz','Location','eastoutside');
+legend(['Young ' channels_to_plot{nCh}],['Old ' channels_to_plot{nCh}],'Location','eastoutside');
 
 %% Plotting - Frequency
 % faxis=TFRhann.freq;
