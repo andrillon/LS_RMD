@@ -34,7 +34,7 @@ files=dir([preproc_path filesep 'ICAcleaned_etrial_ft_*.mat']);
 %%
 res_mat=[];
 redo=0; complete=0;
-datatype=2; %0 = evoked, stim locked; 1 = evoked, resp locked; 2 = induced, resp locked
+datatype=1; %0 = evoked, stim locked; 1 = evoked, resp locked; 2 = induced, resp locked
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -66,19 +66,28 @@ for nF=80:length(files)
             warning('More than expected time points - removing first and last');
         end
         all_TFRhann(nFc,:,:,:)=temp_powspctrm_bsl;
-        %     all_TFRhann(nFc,:,:,:)=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));
+        %     all_TFRhann(nFc,:,:,:)=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));    
+        behav_table=readtable([folder_name filesep 'behav_' file_name(findstr(file_name,'ft_')+3:end-4) '.csv']);
+        meanRT(nFc)=nanmean(behav_table.RT);
+        meanAcc(nFc)=(nnz(behav_table.RT>0))/(length(behav_table.RT));
         TFtimes=TFRhann.time(TFRhann.time>-0.5 & TFRhann.time<1.5);
         faxis=TFRhann.freq;
     elseif datatype==1 % evoked, resp locked
         load([preproc_path SubID '_TF_perTrial_ICAcleaned_RespLocked.mat']); %Fixed window
         nFc=nFc+1;
         all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_rlock.powspctrm_bsl,1));
+        behav_table=readtable([folder_name filesep 'behav_' file_name(findstr(file_name,'ft_')+3:end-4) '.csv']);
+        meanRT(nFc)=nanmean(behav_table.RT);
+        meanAcc(nFc)=(nnz(behav_table.RT>0))/(length(behav_table.RT));
         TFtimes=TFRhann_rlock.time;
         faxis=TFRhann_rlock.freq;
     elseif datatype==2 % induced, resp locked
         load([preproc_path SubID '_TF_perTrial_ICAcleaned_RespLocked_ERPremoved.mat']); %Fixed window
         nFc=nFc+1;
         all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_rlock_induced.powspctrm_bsl,1));
+        behav_table=readtable([folder_name filesep 'behav_' file_name(findstr(file_name,'ft_')+3:end-4) '.csv']);
+        meanRT(nFc)=nanmean(behav_table.RT);
+        meanAcc(nFc)=(nnz(behav_table.RT>0))/(length(behav_table.RT));
         TFtimes=TFRhann_rlock_induced.time;
         faxis=TFRhann_rlock_induced.freq;
     end
@@ -102,9 +111,9 @@ for nF=80:length(files)
         thisgroup=NaN;
         thisagegroup=NaN;
     end
-    if thisagegroup>1
-        continue;
-    end
+%     if thisagegroup>1
+%         continue;
+%     end
     all_group(nFc)=thisgroup; % STORE HERE THE INFO ABOUT THE GROUP
     all_agegroup(nFc)=thisagegroup; % STORE HERE THE INFO ABOUT THE AGE GROUP
 %     if thisagegroup==0
@@ -205,7 +214,7 @@ end
 
 %% Plotting - Time
 % channels_to_plot={'Fz','Cz','Pz','Oz'};
-channels_to_plot={'Fz'};
+channels_to_plot={'P3','P4'};
 %Delta
 f1=figure;
 set(gcf,'Position',[ 2104         115         788         574]);
@@ -303,21 +312,21 @@ for nCh=1:length(channels_to_plot)
     hold on;
     simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,0,1);
     simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,0,1);
-    data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3)) ;
-        squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3))];
-    group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
-    [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFwindow,'full');
-    for j=1:realpos.nclusters
-        xTime=TFwindow;
-        plot(xTime(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
-    end
+%     data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3)) ;
+%         squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3))];
+%     group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
+%     [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFwindow,'full');
+%     for j=1:realpos.nclusters
+%         xTime=TFwindow;
+%         plot(xTime(realpos.clusters==(j)),zeros(1,sum(realpos.clusters==(j))),'Color','k');
+%     end
 end
 % xlim([0 1])
 % ylim([-.7 2])
 xlabel('Time (s)')
 ylabel('Power')
 title('Mu Power - Young 90% vs Old 90%','FontSize',10)
-legend(['Young ' channels_to_plot{nCh}],['Old ' channels_to_plot{nCh}],'Location','eastoutside');
+legend(['Young ' channels_to_plot{1}],['Old ' channels_to_plot{1}],['Young ' channels_to_plot{2}],['Old ' channels_to_plot{2}],'Location','eastoutside');
 
 %Beta
 f5=figure;
@@ -620,3 +629,47 @@ xlabel('Frequency (Hz)')
 ylabel('Power')
 title('900-1000ms Spectral Power - Young 90% vs Old 90%','FontSize',10)
 legend(['Young '  channels_to_plot{1}],['Old '  channels_to_plot{1}],'Location','eastoutside');
+
+%% Behaviour Correlation
+% So what I need to do is create a var with avg power at time/freq of
+% interest for each participant, then correlate (1) overall; and (2) within
+% each group separately
+% Of interest: 
+
+%Trim participants
+all_TFRhann=all_TFRhann(all_agegroup<=1,:,:,:);
+meanRT=meanRT(:,all_agegroup<=1);
+meanAcc=meanAcc(:,all_agegroup<=1);
+
+% Separate groups
+meanRT_young90=meanRT(:,all_agegroup==0);
+meanRT_old90=meanRT(:,all_agegroup==1);
+meanAcc_young90=meanAcc(:,all_agegroup==0);
+meanAcc_old90=meanAcc(:,all_agegroup==1);
+
+% Stat by chan
+channels_to_stat={'Cz'};
+
+for nCh=1:length(channels_to_stat)
+    [pV,~,stats]=ranksum(squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,channels_to_stat{nCh}),faxis > 8 & faxis < 12,TFtimes>-.30 & TFtimes <.30),3),4)), ...
+        meanAcc);
+end
+
+% Stat and plot topo
+
+cmap=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
+cmap=flipud(cmap);
+zvalim=4; figure;
+temp_topo=[]; temp_pV=[];
+for nCh=1:length(layout.label)-2
+    [pV,~,stats]=ranksum((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis > 8 & faxis < 12,TFtimes>-.30 & TFtimes <.30),3),4))), ...
+        meanAcc);
+    temp_topo(nCh)=stats.zval;
+    temp_pV(nCh)=pV;
+end
+temp_topo(temp_pV>0.05)=0;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title(['Power'])
+colormap(cmap);
+colorbar; caxis([-1 1]*zvalim)
