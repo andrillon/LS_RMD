@@ -114,12 +114,12 @@ for nF=1:length(files)
                                 
                 Frac = amri_sig_fractal(block_data_win',data.fsample,'detrend',1,'frange',[param.freqV(1) param.freqV(end)]);
                 
-                subj_logpow(nBl,nEl,:)=logpow(faxis>=min(param.freqV) & faxis<=max(param.freqV));
-                subj_logsnr(nBl,nEl,:)=logSNR(faxis>=min(param.freqV) & faxis<=max(param.freqV));
+                subj_logpow(nBl,nEl,:)=logpow(:,faxis>=min(param.freqV) & faxis<=max(param.freqV));
+                subj_logsnr(nBl,nEl,:)=logSNR(:,faxis>=min(param.freqV) & faxis<=max(param.freqV));
                 ssvep_freq=faxis(faxis>=min(param.freqV) & faxis<=max(param.freqV));
                 else
-                    subj_logpow(nBl,nEl,:)=nan(1,246);
-                    subj_logsnr(nBl,nEl,:)=nan(1,246);
+                    subj_logpow(nBl,nEl,:)=nan(1,280);
+                    subj_logsnr(nBl,nEl,:)=nan(1,280);
                 end
             end
         end
@@ -182,7 +182,7 @@ figure; set(gcf,'Position',[213         173        1027/4         805/3]);
 % jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
 format_fig;
 hold on;
-simpleTplot(ssvep_freq',squeeze(nanmean(all_logpow(:,:,match_str(newlabels,'Oz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+simpleTplot(ssvep_freq,squeeze(nanmean(all_logpow(:,:,match_str(newlabels,'Oz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
 xlim([2 30])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
@@ -194,7 +194,7 @@ figure; set(gcf,'Position',[213         173        1027/4         805/3]);
 % jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
 format_fig;
 hold on;
-simpleTplot(ssvep_freq',squeeze(nanmean(all_logsnr(:,:,match_str(newlabels,'Oz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+simpleTplot(ssvep_freq,squeeze(nanmean(all_logsnr(:,:,match_str(newlabels,'Oz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
 xlim([2 30])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
