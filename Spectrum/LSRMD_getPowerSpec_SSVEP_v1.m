@@ -177,8 +177,8 @@ end
 cmap2=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
 cmap2=flipud(cmap2);
 
-figure; set(gcf,'Position',[213         173        1027/4         805/3]);
-% subplot(1,4,1);
+figure; %set(gcf,'Position',[213         173        1027/4         805/3]);
+subplot(2,1,1);
 % jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
 format_fig;
 hold on;
@@ -189,9 +189,7 @@ xlabel('Frequency (Hz)')
 ylabel('Power')
 
 
-figure; set(gcf,'Position',[213         173        1027/4         805/3]);
-% subplot(1,4,1);
-% jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
+subplot(2,1,2);
 format_fig;
 hold on;
 simpleTplot(ssvep_freq,squeeze(nanmean(all_logsnr(:,:,match_str(newlabels,'Oz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
