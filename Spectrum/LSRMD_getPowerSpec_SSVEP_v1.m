@@ -114,8 +114,8 @@ for nF=1:length(files)
                                 
                 Frac = amri_sig_fractal(block_data_win',data.fsample,'detrend',1,'frange',[param.freqV(1) param.freqV(end)]);
                 
-                subj_logpow(nBl,nEl,:)=logpow(:,faxis>=min(param.freqV) & faxis<=max(param.freqV));
-                subj_logsnr(nBl,nEl,:)=logSNR(:,faxis>=min(param.freqV) & faxis<=max(param.freqV));
+                subj_logpow(nBl,nEl,:)=mean(logpow(:,faxis>=min(param.freqV) & faxis<=max(param.freqV)),1);
+                subj_logsnr(nBl,nEl,:)=mean(logSNR(:,faxis>=min(param.freqV) & faxis<=max(param.freqV)),1);
                 ssvep_freq=faxis(faxis>=min(param.freqV) & faxis<=max(param.freqV));
                 else
                     subj_logpow(nBl,nEl,:)=nan(1,280);
