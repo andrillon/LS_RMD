@@ -32,7 +32,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-redo=1; complete=0;
+redo=0; complete=0;
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -49,7 +49,7 @@ for nF=1:length(files)
     tic;
     fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
     
-    if redo==1 || exist([preproc_path filesep SubID '_FFT_perBlock_byElec_ICAcleaned_v2.mat'])==0
+    if redo==1 || exist([preproc_path filesep SubID '_SSVEP_perBlock_byElec_ICAcleaned_v2.mat'])==0
         subj_pow=[];
         %         subj_SNR=[];
         %         subj_SNRtag=[];
@@ -112,7 +112,7 @@ for nF=1:length(files)
                 [logSNR, faxis, logpow]=get_logSNR(block_data_win_cleaned,data.fsample,param);
                 logpow=mean(logpow,1);
                                 
-                Frac = amri_sig_fractal(block_data_win',data.fsample,'detrend',1,'frange',[param.freqV(1) param.freqV(end)]);
+%                 Frac = amri_sig_fractal(block_data_win',data.fsample,'detrend',1,'frange',[param.freqV(1) param.freqV(end)]);
                 
                 subj_logpow(nBl,nEl,:)=mean(logpow(:,faxis>=min(param.freqV) & faxis<=max(param.freqV)),1);
                 subj_logsnr(nBl,nEl,:)=mean(logSNR(:,faxis>=min(param.freqV) & faxis<=max(param.freqV)),1);
@@ -174,15 +174,14 @@ end
 
 
 %%
-cmap2=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
-cmap2=flipud(cmap2);
+thisChannel='Oz';
 
 figure; %set(gcf,'Position',[213         173        1027/4         805/3]);
 subplot(2,1,1);
 % jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
 format_fig;
 hold on;
-simpleTplot(ssvep_freq,squeeze(nanmean(all_logpow(:,:,match_str(newlabels,'Oz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+simpleTplot(ssvep_freq,squeeze(nanmean(all_logpow(:,:,match_str(newlabels,thisChannel),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
 xlim([2 30])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
@@ -192,8 +191,82 @@ ylabel('Power')
 subplot(2,1,2);
 format_fig;
 hold on;
-simpleTplot(ssvep_freq,squeeze(nanmean(all_logsnr(:,:,match_str(newlabels,'Oz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+simpleTplot(ssvep_freq,squeeze(nanmean(all_logsnr(:,:,match_str(newlabels,thisChannel),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
 xlim([2 30])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
 ylabel('SNR')
+
+%%
+thisChannel='Oz';
+figure; %set(gcf,'Position',[213         173        1027/4         805/3]);
+subplot(2,1,1);
+% jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
+format_fig;
+hold on;
+[~,hp(1)]=simpleTplot(ssvep_freq,squeeze(nanmean(all_logpow(ismember(all_group,[2 5]),:,match_str(newlabels,thisChannel),:),2)),0,'b',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+[~,hp(2)]=simpleTplot(ssvep_freq,squeeze(nanmean(all_logpow(ismember(all_group,[4]),:,match_str(newlabels,thisChannel),:),2)),0,'r',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+xlim([2 30])
+% ylim([-.7 2])
+xlabel('Frequency (Hz)')
+ylabel('Power')
+legend(hp,{'old','young'})
+
+subplot(2,1,2);
+format_fig;
+hold on;
+simpleTplot(ssvep_freq,squeeze(nanmean(all_logsnr(ismember(all_group,[2 5]),:,match_str(newlabels,thisChannel),:),2)),0,'b',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+simpleTplot(ssvep_freq,squeeze(nanmean(all_logsnr(ismember(all_group,[4]),:,match_str(newlabels,thisChannel),:),2)),0,'r',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+xlim([2 30])
+% ylim([-.7 2])
+xlabel('Frequency (Hz)')
+ylabel('SNR')
+
+%%
+cmap3=cbrewer('seq','YlOrRd',12); % select a sequential colorscale from yellow to red (64)
+cmap3=cmap3(4:end,:);
+
+[closestvalue,index]=findclosest(ssvep_freq,20);
+SNR_Old=squeeze(nanmean(all_logsnr(ismember(all_group,[2 5]),:,:,index),2));
+SNR_Young=squeeze(nanmean(all_logsnr(ismember(all_group,[4]),:,:,index),2));
+
+[h,pV_SNR,~,stats]=ttest2(SNR_Old,SNR_Young);
+
+cmap=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
+cmap=flipud(cmap);
+cmap2=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap2(cmap2<0)=0; cmap2(cmap2>1)=1;
+
+correspChannel=[];
+for nCh=1:length(layout.label)-2
+    correspChannel(nCh)=match_str(newlabels,layout.label(nCh));
+end
+
+figure;
+subplot(1,2,1);
+temp_topo=nanmean(SNR_Old);
+simpleTopoPlot_ft(temp_topo(correspChannel)', layout,'on',[],0,1);
+title('Older 90%');
+colormap(cmap2);
+colorbar;
+caxis([0 .3])
+
+subplot(1,2,2);
+temp_topo=nanmean(SNR_Young);
+simpleTopoPlot_ft(temp_topo(correspChannel)', layout,'on',[],0,1);
+title('Younger 90%');
+colormap(cmap2);
+colorbar;
+caxis([0 .3])
+
+figure;
+temp_topo=stats.tstat;
+simpleTopoPlot_ft(temp_topo(correspChannel)', layout,'on',[],0,1);
+colormap(cmap);
+colorbar;
+caxis([-1 1]*3)
+
+% figure; hold on;
+% for nB=1:9
+%     plot(squeeze(mean(SNR_New(:,nB,:),1)),'Color',cmap3(nB,:));
+% end
