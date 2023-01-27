@@ -198,7 +198,7 @@ xlabel('Frequency (Hz)')
 ylabel('SNR')
 
 %%
-thisChannel='Oz';
+thisChannel='Fz';
 figure; %set(gcf,'Position',[213         173        1027/4         805/3]);
 subplot(2,1,1);
 % jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
@@ -270,3 +270,67 @@ caxis([-1 1]*3)
 % for nB=1:9
 %     plot(squeeze(mean(SNR_New(:,nB,:),1)),'Color',cmap3(nB,:));
 % end
+
+%%
+thisChannel='Oz';
+figure;
+delta_power=squeeze(mean(all_logpow(:,:,match_str(newlabels,thisChannel),ssvep_freq<5),4));
+simpleTplot(1:9,squeeze(delta_power(ismember(all_group,[2 5]),:)),0,'b',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+simpleTplot(1:9,squeeze(delta_power(ismember(all_group,[4]),:)),0,'r',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+
+
+figure;
+theta_power=squeeze(mean(all_logpow(:,:,match_str(newlabels,thisChannel),ssvep_freq>7 & ssvep_freq<10),4));
+simpleTplot(1:9,squeeze(theta_power(ismember(all_group,[2 5]),:)),0,'b',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+simpleTplot(1:9,squeeze(theta_power(ismember(all_group,[4]),:)),0,'r',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+
+
+%%
+figure; 
+zall_logpow=zscore(all_logpow,[],2);
+for nBl=1:9
+    subplot(3,3,nBl);
+    temp_topo=squeeze(mean(mean(zall_logpow(ismember(all_group,[4]),nBl,:,ssvep_freq>7 & ssvep_freq<10),4),1));
+    simpleTopoPlot_ft(temp_topo(correspChannel), layout,'on',[],0,1);
+colorbar;
+caxis([-1 1]*0.4)
+end
+
+%
+figure; 
+zall_logpow=zscore(all_logpow,[],2);
+for nBl=1:9
+    subplot(3,3,nBl);
+    temp_topo=squeeze(mean(mean(zall_logpow(ismember(all_group,[2 5]),nBl,:,ssvep_freq>7 & ssvep_freq<10),4),1));
+    simpleTopoPlot_ft(temp_topo(correspChannel), layout,'on',[],0,1);
+colorbar;
+caxis([-1 1]*0.4)
+end
+
+%%
+thisChannel='Fz';
+cmap2=cbrewer('seq','YlOrRd',12); % select a sequential colorscale from yellow to red (64)
+
+figure; %set(gcf,'Position',[213         173        1027/4         805/3]);
+subplot(2,1,1);
+
+for nBl=1:9% jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
+format_fig;
+hold on;
+[~,hp(1)]=simpleTplot(ssvep_freq,squeeze(nanmean(all_logpow(ismember(all_group,[2 5]),nBl,match_str(newlabels,thisChannel),:),2)),0,cmap2(3+nBl,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+xlim([2 30])
+% ylim([-.7 2])
+xlabel('Frequency (Hz)')
+ylabel('Power')
+end
+
+subplot(2,1,2);
+for nBl=1:9% jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
+format_fig;
+hold on;
+[~,hp(2)]=simpleTplot(ssvep_freq,squeeze(nanmean(all_logpow(ismember(all_group,[4]),nBl,match_str(newlabels,thisChannel),:),2)),0,cmap2(3+nBl,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+xlim([2 30])
+% ylim([-.7 2])
+xlabel('Frequency (Hz)')
+ylabel('Power')
+end
