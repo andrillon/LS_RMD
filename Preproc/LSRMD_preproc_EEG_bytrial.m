@@ -43,6 +43,9 @@ for nF=1:length(folders)
         end
     end
     
+      if ismember(type_File,[1 2])
+        continue;
+    end
     if strcmp(SubID,'AA_15_04_14')
         warning('Skipping AA_15_04_14... missing event information');
         continue;
@@ -198,6 +201,9 @@ for nF=1:length(folders)
         if isempty(thisF)
             continue;
         end
+        if isempty(data)
+            continue;
+        end
         eval(['badChannels=[' LSRMDBadTrialsChannels.ExcludedChannels{thisF} '];']);
         eval(['badTrials=[' LSRMDBadTrialsChannels.ExcludedTrials{thisF} '];']);
         cfg=[];
@@ -292,7 +298,7 @@ for nF=1:length(folders)
         data = ft_preprocessing(cfg,data);
         
         %%%%%% Re-order channels
-        load(['..' filesep 'LS_RMD_Common_Electrodes.mat']);
+        load(['..' filesep 'LS_RMD_Common_Electrodes_64ch.mat']);
         % fix channel names
         mylabels=data.label;
         newchanidx=[];

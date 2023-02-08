@@ -16,7 +16,7 @@ load(['..' filesep 'LS_RMD_Bad_Components.mat']);
 
 
 %% loop on subjects
-redo=0;
+redo=1;
 for nF=1:length(folders)
     files=dir([folders(nF).folder filesep folders(nF).name filesep '*M*.eeg']); % DP 06/10 adding M to distinguish from older adults
     type_File=1;
@@ -40,6 +40,12 @@ for nF=1:length(folders)
         end
     end
     
+    if ismember(type_File,[1 2])
+        continue;
+    end
+%     if ~ismember(SubID,{'HN884'})
+%         continue;
+%     end
     if strcmp(SubID,'AA_15_04_14')
         warning('Skipping AA_15_04_14... missing event information');
         continue;
@@ -91,6 +97,7 @@ for nF=1:length(folders)
                 all_channels=intersect(all_channels,hdr.label(find((cellfun(@isempty,regexp(hdr.label,'EOG')) & ~cellfun(@isempty,regexp(hdr.chantype,'eeg'))))));
             end
         end
+        
         
         % Epoch by trial
         for k=1:numBlocks
@@ -203,6 +210,7 @@ for nF=1:length(folders)
         cfg.center      = 'yes';
         layout=ft_prepare_layout(cfg);
         
+        data.label=newlabels;
         if ~isempty(badChannels)
             fprintf('... ... interpolating %g channels\n',length(badChannels))
             % find neighbours
@@ -256,7 +264,7 @@ for nF=1:length(folders)
         data = ft_preprocessing(cfg,data);
         
  %%%%%% Re-order channels
-        load(['..' filesep 'LS_RMD_Common_Electrodes.mat']);
+        load(['..' filesep 'LS_RMD_Common_Electrodes_64ch.mat']);
         % fix channel names
         mylabels=data.label;
         newchanidx=[];

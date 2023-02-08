@@ -24,6 +24,7 @@ try
     strformat=1;
     evt_values={evt.value};
     evt_values(find(cellfun(@isempty,evt_values)))={'void'};
+    evt_values(find(cellfun(@isnumeric,evt_values)))={'void'};
     possible_values={'S101','S102','S103','S104','S105','S106','S107','S108','S109','S110',...
         'S111','S112'};
     stim_idx=find(ismember(evt_values,possible_values));
@@ -50,6 +51,7 @@ catch
     strformat=0;
     evt_values={evt.value};
     evt_values(find(cellfun(@isempty,evt_values)))={NaN};
+    evt_values(find(cellfun(@isnumeric,evt_values)))={NaN};
     evt_values=cell2mat(evt_values);
     possible_values=101:112;
     stim_idx=find(ismember(evt_values,possible_values));
