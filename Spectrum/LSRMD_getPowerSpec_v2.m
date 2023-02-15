@@ -82,22 +82,21 @@ for nF=1:length(files)
     cfg.length        = 10;
     cfg.overlap       = 0.5;
     data2              = ft_redefinetrial(cfg, data);
-    
+    %%%%% TRY TO REMOVE ARTEFACTS?
+
     % compute the fractal and original spectra
-    cfg              = [];
-    cfg.method       = 'mtmfft';
+    cfg               = [];
+    cfg.foilim        = [2 30];
+    cfg.pad           = 'nextpow2';
+    cfg.tapsmofrq     = 1;
+    cfg.method        = 'mtmfft';
     cfg.output        = 'fooof_aperiodic';
-    cfg.taper        = 'hanning';
-    cfg.foi          = 2:0.5:30;                         % analysis 2 to 30 Hz in steps of 2 Hz
-    cfg.t_ftimwin    = ones(length(cfg.foi),1).*0.5;   % length of time window = 0.5 sec
-    % cfg.pad           = 'maxperlen';
     fractal = ft_freqanalysis(cfg, data2);
-
-        cfg.output       = 'pow';
-        pow = ft_freqanalysis(cfg, data2);
-
+    cfg.output        = 'pow';
+    pow = ft_freqanalysis(cfg, data2);
+    
     nFc=nFc+1;
-    all_pow(nFc,:,:,:)=pow.powspctrm;
+    all_pow(nFc,:,:,:)=log10(pow.powspctrm);
     if exist('subj_osci')~=0
         all_osci(nFc,:,:,:)=subj_osci;
     end
@@ -176,19 +175,6 @@ xlabel('Frequency (Hz)')
 ylabel('Power')
 
 %% Alpha 8-11Hz
-mylabels=data.label';
-for nCh=1:length(mylabels)
-    findspace=findstr(mylabels{nCh},' ');
-    if isempty(findspace)
-        newlabels{nCh}=mylabels{nCh};
-    else
-        if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
-            newlabels{nCh}=mylabels{nCh}(findspace+1:end);
-        else
-            newlabels{nCh}=mylabels{nCh}(1:findspace-1);
-        end
-    end
-end
 
 figure; set(gcf,'Position',[213         173        1027         805/3]);
 cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
@@ -220,6 +206,109 @@ for nD=1:2
     end
 end
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
+
+%% Aperiodic component
+figure; set(gcf,'Position',[213         173        1027         805/3]);
+cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap(cmap<0)=0;
+
+
+agegroups={[4],[5]}; % Young vs Old
+for nD=1:2
+    temp_topo=[];
+    for nCh=1:length(fractal.label)
+        temp_topo(nCh)=squeeze(nanmean(all_aperiodic_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==nCh,5),1)); %Alpha
+    end
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+    simpleTopoPlot_ft(temp_topo(correspCh2), layout,'on',[],0,1);
+    colormap(cmap);
+    %     if nD==1
+    %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+    %     end
+    colorbar;
+    if nD==1
+        title('Offset Young')
+    elseif nD==2
+        title('Offset Old')
+    end
+end
+
+figure;
+for nD=1:2
+    temp_topo=[];
+    for nCh=1:length(fractal.label)
+        temp_topo(nCh)=squeeze(nanmean(all_aperiodic_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==nCh,6),1)); %Alpha
+    end
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+    simpleTopoPlot_ft(temp_topo(correspCh2), layout,'on',[],0,1);
+    colormap(cmap);
+    %     if nD==1
+    %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+    %     end
+    colorbar;
+    if nD==1
+        title('Slope Young')
+    elseif nD==2
+        title('Slope Old')
+    end
+end
+
+%% Analysis of peaks
+figure;
+myLabels={'Fz','Cz','Pz','Oz'};
+for nCh=1:length(myLabels)
+    subplot(2,2,nCh)
+    hold on;
+    for nD=1:2
+        histogram(all_peak_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==match_str(fractal.label,myLabels{nCh}),5),2:2:30);
+    end
+    xlabel('Freq (Hz)')
+    ylabel('Count peaks')
+    format_fig;
+    legend({'Young','Old'})
+end
+
+all_alphapeak_component=all_peak_component(all_peak_component(:,5)>8 & all_peak_component(:,5)<13,:);
+
+agegroups={[4],[5]}; % Young vs Old
+for nD=1:2
+    temp_topo=[];
+    for nCh=1:length(fractal.label)
+        temp_topo(nCh)=squeeze(nanmean(all_alphapeak_component(all_alphapeak_component(:,2)==agegroups{nD} & all_alphapeak_component(:,4)==nCh,5),1)); %Alpha
+    end
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+    simpleTopoPlot_ft(temp_topo(correspCh2), layout,'on',[],0,1);
+    colormap(cmap);
+    %     if nD==1
+    %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+    %     end
+    colorbar;
+    if nD==1
+        title('Alpha Freq Young')
+    elseif nD==2
+        title('Alpha Freq Old')
+    end
+end
+
+figure;
+for nD=1:2
+    temp_topo=[];
+    for nCh=1:length(fractal.label)
+        temp_topo(nCh)=squeeze(nanmean(all_alphapeak_component(all_alphapeak_component(:,2)==agegroups{nD} & all_alphapeak_component(:,4)==nCh,7),1)); %Alpha
+    end
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+    simpleTopoPlot_ft(temp_topo(correspCh2), layout,'on',[],0,1);
+    colormap(cmap);
+    %     if nD==1
+    %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+    %     end
+    colorbar;
+    if nD==1
+        title('Alpha Peak Amplitude Young')
+    elseif nD==2
+        title('Alpha Peak Amplitude Old')
+    end
+end
 
 %%
 % % alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
