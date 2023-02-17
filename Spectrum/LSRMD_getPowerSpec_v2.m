@@ -77,18 +77,31 @@ for nF=1:length(files)
         continue;
     end
     
+    
     % chunk into 10-second segments
     cfg               = [];
     cfg.length        = 10;
     cfg.overlap       = 0.5;
     data2              = ft_redefinetrial(cfg, data);
+    
     %%%%% TRY TO REMOVE ARTEFACTS?
-
+    maxSignal=[];
+    for nTr=1:length(data2.trial)
+        maxSignal(nTr,:)=max(abs(data2.trial{nTr}),[],2);
+    end
+    cfg               = [];
+    absThr=250;
+    pptionThr=0.4;
+    fprintf('... ... discarding %g trials (/%g) because of %g channels above threshold of %g\n',...
+        sum(mean(maxSignal>absThr,2)>=pptionThr),length(data2.trial),100*pptionThr,absThr)
+    cfg.trials        = find(mean(maxSignal>absThr,2)<pptionThr);
+    data2              = ft_redefinetrial(cfg, data2);
+    
     % compute the fractal and original spectra
     cfg               = [];
     cfg.foilim        = [2 30];
     cfg.pad           = 'nextpow2';
-    cfg.tapsmofrq     = 1;
+    cfg.tapsmofrq     = 0.5;
     cfg.method        = 'mtmfft';
     cfg.output        = 'fooof_aperiodic';
     fractal = ft_freqanalysis(cfg, data2);
