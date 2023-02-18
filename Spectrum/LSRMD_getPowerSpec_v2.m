@@ -32,7 +32,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-redo=1; complete=0;
+redo=0; complete=0;
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -73,7 +73,7 @@ for nF=1:length(files)
     end
     
     fprintf('%2.0f-%2.0f\n',0,0)
-    if size(data.trial,2)<9
+    if size(data.trial,2)<8
         continue;
     end
     
@@ -156,11 +156,11 @@ for nF=1:length(files)
     
     
 end
-save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'all_pow','all_group','all_agegroup','all_peak_component','all_aperiodic_component','all_frac');
+save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'all_pow','all_group','all_agegroup','all_peak_component','all_aperiodic_component','all_frac','fractal');
 
 %% Topographies 25Hz tag
 cfg = [];
-cfg.layout = 'biosemi64.lay';
+cfg.layout = 'acticap-64ch-standard2.mat';
 cfg.channel=newlabels;
 cfg.center      = 'yes';
 layout=ft_prepare_layout(cfg);
@@ -210,7 +210,7 @@ for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
     %     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>1 & faxis<3),1),2),4)); %Delta
     %     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>4 & faxis<7),1),2),4)); %Theta
-    temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>8 & faxis<11),1),2),4)); %Alpha
+    temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh,faxis>8 & faxis<11),1),2),4)); %Alpha
     %     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>12 & faxis<29),1),2),4)); %Beta
     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
     colormap(cmap);

@@ -33,7 +33,7 @@ files=dir([preproc_path filesep 'ICAcleaned_etrial_ft_*.mat']);
 
 %%
 res_mat=[];
-redo=1; complete=0;
+redo=0; complete=0;
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -177,20 +177,20 @@ colorbar;
 end
 
 %Younger 50% coherence
-maxAbsValues=[];
-
-f1=figure;
-for nCh=1:length(myLabels)
-    subplot(2,2,nCh);
-    simpleTFplot(squeeze(nanmean(all_TFRhann((all_group==1|all_group==3),match_str(newlabels,myLabels{nCh}),:,:),1)),TFRhann.freq,TFtimes,0,0);
-    format_fig;
-    title(myLabels{nCh})
-colorbar;
-    maxAbsValues=[maxAbsValues max(max(abs(squeeze(nanmean(all_TFRhann(:,match_str(newlabels,myLabels{nCh}),:,:),1)))))];
-end
+% maxAbsValues=[];
+% 
+% f1=figure;
+% for nCh=1:length(myLabels)
+%     subplot(2,2,nCh);
+%     simpleTFplot(squeeze(nanmean(all_TFRhann((all_group==1|all_group==3),match_str(newlabels,myLabels{nCh}),:,:),1)),TFRhann.freq,TFtimes,0,0);
+%     format_fig;
+%     title(myLabels{nCh})
+% colorbar;
+%     maxAbsValues=[maxAbsValues max(max(abs(squeeze(nanmean(all_TFRhann(:,match_str(newlabels,myLabels{nCh}),:,:),1)))))];
+% end
 
 %Younger 90% coherence
-f2=figure;
+f1=figure;
 for nCh=1:length(myLabels)
     subplot(2,2,nCh);
     simpleTFplot(squeeze(nanmean(all_TFRhann((all_group==4),match_str(newlabels,myLabels{nCh}),:,:),1)),TFRhann.freq,TFtimes,0,0);
@@ -201,7 +201,7 @@ colorbar;
 end
 
 %Older 90% coherence
-f3=figure;
+f2=figure;
 for nCh=1:length(myLabels)
     subplot(2,2,nCh);
     simpleTFplot(squeeze(nanmean(all_TFRhann((all_group==5),match_str(newlabels,myLabels{nCh}),:,:),1)),TFRhann.freq,TFtimes,0,0);
@@ -220,13 +220,13 @@ figure(f2);
     subplot(2,2,nCh);
 caxis([-1 1]*max(maxAbsValues))
 
-figure(f3);
-    subplot(2,2,nCh);
-caxis([-1 1]*max(maxAbsValues))
+% figure(f3);
+%     subplot(2,2,nCh);
+% caxis([-1 1]*max(maxAbsValues))
 end
 %% Difference TF
 % Young 90% - Old 90%
-f2=figure;
+f3=figure;
 for nCh=1:length(myLabels)
     subplot(2,2,nCh);
     TF_groupA=squeeze(nanmean(all_TFRhann((all_group==4),match_str(newlabels,myLabels{nCh}),:,:),1));
@@ -238,30 +238,30 @@ colorbar;
 end
 
 %Young 90% - Young 50%
-for nCh=1:length(myLabels)
-    subplot(2,2,nCh);
-    TF_groupA=squeeze(nanmean(all_TFRhann((all_group==4),match_str(newlabels,myLabels{nCh}),:,:),1));
-    TF_groupB=squeeze(nanmean(all_TFRhann((all_group==1|all_group==3),match_str(newlabels,myLabels{nCh}),:,:),1));
-    simpleTFplot(TF_groupA-TF_groupB,TFRhann.freq,TFtimes,0,0);
-    format_fig;
-    title(myLabels{nCh})
-colorbar;
-end
-
-%Young 50% - Old 90%
-for nCh=1:length(myLabels)
-    subplot(2,2,nCh);
-    TF_groupA=squeeze(nanmean(all_TFRhann((all_group==1|all_group==3),match_str(newlabels,myLabels{nCh}),:,:),1));
-    TF_groupB=squeeze(nanmean(all_TFRhann((all_group==5),match_str(newlabels,myLabels{nCh}),:,:),1));
-    simpleTFplot(TF_groupA-TF_groupB,TFRhann.freq,TFtimes,0,0);
-    format_fig;
-    title(myLabels{nCh})
-colorbar;
-end
+% for nCh=1:length(myLabels)
+%     subplot(2,2,nCh);
+%     TF_groupA=squeeze(nanmean(all_TFRhann((all_group==4),match_str(newlabels,myLabels{nCh}),:,:),1));
+%     TF_groupB=squeeze(nanmean(all_TFRhann((all_group==1|all_group==3),match_str(newlabels,myLabels{nCh}),:,:),1));
+%     simpleTFplot(TF_groupA-TF_groupB,TFRhann.freq,TFtimes,0,0);
+%     format_fig;
+%     title(myLabels{nCh})
+% colorbar;
+% end
+% 
+% %Young 50% - Old 90%
+% for nCh=1:length(myLabels)
+%     subplot(2,2,nCh);
+%     TF_groupA=squeeze(nanmean(all_TFRhann((all_group==1|all_group==3),match_str(newlabels,myLabels{nCh}),:,:),1));
+%     TF_groupB=squeeze(nanmean(all_TFRhann((all_group==5),match_str(newlabels,myLabels{nCh}),:,:),1));
+%     simpleTFplot(TF_groupA-TF_groupB,TFRhann.freq,TFtimes,0,0);
+%     format_fig;
+%     title(myLabels{nCh})
+% colorbar;
+% end
 
  %% Topographies 25Hz tag
 cfg = [];
-cfg.layout = 'biosemi64.lay';
+cfg.layout = 'acticap-64ch-standard2.mat';
 cfg.channel=newlabels;
 cfg.center      = 'yes';
 layout=ft_prepare_layout(cfg);
@@ -278,18 +278,18 @@ cmap(cmap<0)=0;
 faxis=TFRhann.freq
 faxis=faxis(faxis>=min(TFRhann.freq) & faxis<=max(TFRhann.freq));
 
-subplot(1,3,1); format_fig;
-% temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>2 & faxis<4,TFtimes>.200 & TFtimes<.500),1),3),4)); %Delta
-% temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>4 & faxis<8,TFtimes>.200 & TFtimes<.600),1),3),4)); %Theta
-% temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>8 & faxis<11,TFtimes>.500 & TFtimes<1.20),1),3),4)); %Alpha
-% temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>12 & faxis<16,TFtimes>.200 & TFtimes<1.0),1),3),4)); %Mu
-temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>16 & faxis<29,TFtimes>.200 & TFtimes<1.0),1),3),4)); %Beta
-simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
-colormap(cmap);
-title('Younger 50% Coherence','FontSize',10)
-maxAbsValues=[maxAbsValues max(max(abs(temp_topo)))];
+% subplot(1,3,1); format_fig;
+% % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>2 & faxis<4,TFtimes>.200 & TFtimes<.500),1),3),4)); %Delta
+% % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>4 & faxis<8,TFtimes>.200 & TFtimes<.600),1),3),4)); %Theta
+% % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>8 & faxis<11,TFtimes>.500 & TFtimes<1.20),1),3),4)); %Alpha
+% % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>12 & faxis<16,TFtimes>.200 & TFtimes<1.0),1),3),4)); %Mu
+% temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>16 & faxis<29,TFtimes>.200 & TFtimes<1.0),1),3),4)); %Beta
+% simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+% colormap(cmap);
+% title('Younger 50% Coherence','FontSize',10)
+% maxAbsValues=[maxAbsValues max(max(abs(temp_topo)))];
 
-subplot(1,3,2);
+subplot(1,2,1);
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==4,correspCh,faxis>2 & faxis<4,TFtimes>.200 & TFtimes<.500),1),3),4)); %Delta
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==4,correspCh,faxis>4 & faxis<8,TFtimes>.200 & TFtimes<.600),1),3),4)); %Theta
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==4,correspCh,faxis>8 & faxis<11,TFtimes>.500 & TFtimes<1.20),1),3),4)); %Alpha
@@ -299,7 +299,7 @@ simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
 title('Younger 90% Coherence','FontSize',10)
 maxAbsValues=[maxAbsValues max(max(abs(temp_topo)))];
  
-subplot(1,3,3);
+subplot(1,2,2);
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==5,correspCh,faxis>2 & faxis<4,TFtimes>.200 & TFtimes<.500),1),3),4)); %Delta
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==5,correspCh,faxis>4 & faxis<8,TFtimes>.200 & TFtimes<.600),1),3),4)); %Theta
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==5,correspCh,faxis>8 & faxis<11,TFtimes>.500 & TFtimes<1.20),1),3),4)); %Alpha

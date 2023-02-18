@@ -63,7 +63,11 @@ for nF=1:length(folders)
         continue;
     end
     
-    numBlocks=length(files);
+    if strcmp(SubID,'HN977')
+        numBlocks=length(files)+1;
+    else
+        numBlocks=length(files);
+    end
     fprintf('Processing %s...',SubID);
     tic;
     if redo==1 || exist([preproc_path filesep 'ICAcleaned_eblock_ft_' SubID '.mat'])==0
@@ -114,13 +118,13 @@ for nF=1:length(folders)
                 continue;
             end
             if type_File==1
-                behavfiles=dir([folders(nF).folder filesep '..' filesep 'Behav' filesep this_file.name(1:end-4) '.mat']);
+                behavfiles=dir([folders(nF).folder filesep 'Behav' filesep this_file.name(1:end-4) '.mat']);
             elseif type_File==2
-                behavfiles=dir([folders(nF).folder filesep '..' filesep 'Behav' filesep this_file.name(1:end-4) '.mat']);
+                behavfiles=dir([folders(nF).folder filesep 'Behav' filesep this_file.name(1:end-4) '.mat']);
             elseif type_File==3
-                behavfiles=dir([folders(nF).folder filesep '..' filesep 'Behav' filesep SubID '90'  num2str(k) '.mat']);
+                behavfiles=dir([folders(nF).folder filesep 'Behav' filesep SubID '90'  num2str(k) '.mat']);
             elseif type_File==4 || type_File==5
-                behavfiles=dir([folders(nF).folder filesep '..' filesep 'Behav' filesep this_file.name(1:end-4) '.mat']); %DP 28/07 adding Megan older adult + younger adult data
+                behavfiles=dir([folders(nF).folder filesep 'Behav' filesep this_file.name(1:end-4) '.mat']); %DP 28/07 adding Megan older adult + younger adult data
             end
             
             file_name = this_file(1).name;
@@ -205,7 +209,7 @@ for nF=1:length(folders)
             end
         end
         cfg = [];
-        cfg.layout = 'biosemi64.lay';
+        cfg.layout = 'acticap-64ch-standard2.mat';
         cfg.channel=newlabels;
         cfg.center      = 'yes';
         layout=ft_prepare_layout(cfg);

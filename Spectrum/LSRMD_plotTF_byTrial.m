@@ -33,8 +33,8 @@ files=dir([preproc_path filesep 'ICAcleaned_etrial_ft_*.mat']);
 
 %%
 res_mat=[];
-redo=0; complete=0;
-datatype=2; %0 = evoked, stim locked; 1 = evoked, resp locked; 2 = induced, resp locked
+redo=1; complete=0;
+datatype=0; %0 = evoked, stim locked; 1 = evoked, resp locked; 2 = induced, resp locked; 3 = induced, stim locked
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -46,7 +46,7 @@ data_young=[];
 data_old=[];
 count_y=0;
 count_o=0;
-for nF=80:length(files)
+for nF=1:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
     SubID=file_name(1:end-4);
@@ -90,6 +90,21 @@ for nF=80:length(files)
         meanAcc(nFc)=(nnz(behav_table.RT>0))/(length(behav_table.RT));
         TFtimes=TFRhann_rlock_induced.time;
         faxis=TFRhann_rlock_induced.freq;
+    elseif datatype==3 % induced, resp locked
+        load([preproc_path SubID '_TF_perTrial_ICAcleaned_ERPremoved.mat']); %Fixed window
+        nFc=nFc+1;
+        TFRhann_induced.powspctrm_bsl=TFRhann_induced.powspctrm_log-repmat(nanmean(TFRhann_induced.powspctrm_log(:,:,:,TFRhann_induced.time<0),4),[1 1 1 length(TFRhann_induced.time)]);
+        temp_powspctrm_bsl=squeeze(nanmean((TFRhann_induced.powspctrm_bsl(:,:,:,TFRhann_induced.time>-0.5 & TFRhann_induced.time<1.5)),1));
+        if size(temp_powspctrm_bsl,3)>39
+            temp_powspctrm_bsl=temp_powspctrm_bsl(:,:,2:end-1);
+            warning('More than expected time points - removing first and last');
+        end
+        all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_induced.powspctrm_bsl,1));
+        behav_table=readtable([folder_name filesep 'behav_' file_name(findstr(file_name,'ft_')+3:end-4) '.csv']);
+        meanRT(nFc)=nanmean(behav_table.RT);
+        meanAcc(nFc)=(nnz(behav_table.RT>0))/(length(behav_table.RT));
+        TFtimes=TFRhann_induced.time(TFRhann_induced.time>-0.5 & TFRhann_induced.time<1.5);;
+        faxis=TFRhann_induced.freq;
     end
     
     if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
@@ -131,13 +146,15 @@ end
 
 %%
 cfg = [];
-cfg.layout = 'biosemi64.lay';
+cfg.layout = 'acticap-64ch-standard2.mat';
 if datatype==0
     cfg.channel=TFRhann.label;
 elseif datatype==1
     cfg.channel=TFRhann_rlock.label;
 elseif datatype==2
     cfg.channel=TFRhann_rlock_induced.label;
+elseif datatype==3
+    cfg.channel=TFRhann_induced.label;
 end
 cfg.center      = 'yes';
 layout=ft_prepare_layout(cfg);
@@ -193,7 +210,7 @@ layout=ft_prepare_layout(cfg);
 
 %% Topographies 25Hz tag
 cfg = [];
-cfg.layout = 'biosemi64.lay';
+cfg.layout = 'acticap-64ch-standard2.mat';
 cfg.channel=newlabels;
 cfg.center      = 'yes';
 layout=ft_prepare_layout(cfg);
@@ -203,7 +220,7 @@ for nCh=1:length(layout.label)-2
 end
 
 %% Trimming Window
-if datatype==0
+if datatype==0 || datatype==3
     all_TFRhann=all_TFRhann(:,:,:,TFtimes>=0 & TFtimes<=1.5);
     TFwindow=TFtimes(TFtimes>=0);
 else
@@ -214,7 +231,8 @@ end
 
 %% Plotting - Time
 % channels_to_plot={'Fz','Cz','Pz','Oz'};
-channels_to_plot={'O1','O2'};
+channels_to_plot={'Oz'};
+% channels_to_plot={'O1','O2'};
 %Delta
 f1=figure;
 set(gcf,'Position',[ 2104         115         788         574]);
@@ -233,9 +251,15 @@ for nCh=1:length(channels_to_plot)
         squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>2 & faxis<4,:),2),3))];
     group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
     [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,TFwindow,'full');
-    for j=1:realpos.nclusters
+    if size(realpos.nclusters)==1
+        j=1;
         xTime=TFwindow;
         plot(xTime(realpos.clusters==realpos.nclusters(j)),zeros(1,sum(realpos.clusters==realpos.nclusters(j))),'Color','k');
+    else
+        for j=1:realpos.nclusters
+        xTime=TFwindow;
+        plot(xTime(realpos.clusters==realpos.nclusters(j)),zeros(1,sum(realpos.clusters==realpos.nclusters(j))),'Color','k');
+        end
     end
 end
 % xlim([0 1])
@@ -311,10 +335,12 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 % for nCh=1:length(channels_to_plot)
     hold on;
-    [~,hp(1)]=simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{1}),faxis>12 & faxis<16,:),2),3)),0,cmap(2,:),[0],'-',0.1,1,0,1,1);
-    [~,hp(2)]=simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{2}),faxis>12 & faxis<16,:),2),3)),0,cmap(4,:),[0],'-',0.1,1,0,1,1);
-    [~,hp(3)]=simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{1}),faxis>12 & faxis<16,:),2),3)),0,cmap2(2,:),[0],'-',0.1,1,0,1,1);
-    [~,hp(4)]=simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{2}),faxis>12 & faxis<16,:),2),3)),0,cmap2(4,:),[0],'-',0.1,1,0,1,1);
+    [~,hp(1)]=simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{1}),faxis>12 & faxis<16,:),2),3)),0,cmap(2,:),[0],'-',0.1,1,0,0,1);
+%     [~,hp(2)]=simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{2}),faxis>12 & faxis<16,:),2),3)),0,cmap(4,:),[0],'-',0.1,1,0,1,1);
+    [~,hp(3)]=simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{1}),faxis>12 & faxis<16,:),2),3)),0,cmap2(2,:),[0],'-',0.1,1,0,0,1);
+%     [~,hp(4)]=simpleTplot(TFwindow,squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{2}),faxis>12 & faxis<16,:),2),3)),0,cmap2(4,:),[0],'-',0.1,1,0,1,1);
+% Above is for plotting across multiple electrodes
+
 %     data=[squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==0),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3)) ;
 %         squeeze(nanmean(nanmean(all_TFRhann((all_agegroup==1),match_str(newlabels,channels_to_plot{nCh}),faxis>12 & faxis<16,:),2),3))];
 %     group=[all_agegroup(all_agegroup==0)' ; all_agegroup(all_agegroup==1)'];
@@ -328,9 +354,10 @@ cmap2=cbrewer('seq','Oranges',5);
 ylim([-.3 .15])
 xlabel('Time (s)')
 ylabel('Power')
-title('Mu Power - O1/O2, Young 90% vs Old 90%','FontSize',10)
+title('Mu Power, Young 90% vs Old 90%','FontSize',10)
 % legend(['Young ' channels_to_plot{1}],['Old ' channels_to_plot{1}],['Young ' channels_to_plot{2}],['Old ' channels_to_plot{2}],'Location','eastoutside');
-legend(hp,{['Young ' channels_to_plot{1}],['Young ' channels_to_plot{2}],['Old ' channels_to_plot{1}],['Old ' channels_to_plot{2}]},'Location','eastoutside');
+% legend(hp,{['Young ' channels_to_plot{1}],['Young ' channels_to_plot{2}],['Old ' channels_to_plot{1}],['Old ' channels_to_plot{2}]},'Location','eastoutside');
+legend('Younger','Older');
 
 %Beta
 f5=figure;
@@ -667,8 +694,8 @@ zvalim=4; figure;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(layout.label)-2
     %EVOKED
-%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
-%         meanAcc','type','spearman','rows','pairwise');
+    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
+        meanAcc','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>4 & faxis<8,TFtimes>-.30 & TFtimes <.10),3),4))), ...
 %         meanAcc','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>8 & faxis<11,TFtimes>-.50 & TFtimes <.0),3),4))), ...
@@ -687,8 +714,8 @@ for nCh=1:length(layout.label)-2
 %         meanAcc','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>12 & faxis<16,TFtimes>-.70 & TFtimes <.0),3),4))), ...
 %         meanAcc','type','spearman','rows','pairwise');
-    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
-        meanAcc','type','spearman','rows','pairwise');
+%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
+%         meanAcc','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end
@@ -696,7 +723,7 @@ temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 %EVOKED
-% title(['Spearmans Rho - Delta*Accuracy, Evoked Resp-Locked, -100 - 150ms'])
+title(['Spearmans Rho - Delta*Accuracy, Evoked Resp-Locked, -100 - 150ms'])
 % title(['Spearmans Rho - Theta*Accuracy, Evoked Resp-Locked, -300 - 100ms'])
 % title(['Spearmans Rho - Alpha*Accuracy, Evoked Resp-Locked, -500 - 0ms'])
 % title(['Spearmans Rho - Mu*Accuracy, Evoked Resp-Locked, -600 - 100ms'])
@@ -706,7 +733,7 @@ simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 % title(['Spearmans Rho - Theta*Accuracy, Induced Resp-Locked, -300 - 100ms'])
 % title(['Spearmans Rho - Alpha*Accuracy, Induced Resp-Locked, -600 - 0ms'])
 % title(['Spearmans Rho - Mu*Accuracy, Induced Resp-Locked, -700 - 0ms'])
-title(['Spearmans Rho - Beta*Accuracy, Induced Resp-Locked, -600 - 0ms'])
+% title(['Spearmans Rho - Beta*Accuracy, Induced Resp-Locked, -600 - 0ms'])
 colormap(cmap);
 colorbar; caxis([-1 1]*zvalim)
 
@@ -717,8 +744,8 @@ zvalim=4; figure;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(layout.label)-2
     %EVOKED
-%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
-%         meanRT','type','spearman','rows','pairwise');
+    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
+        meanRT','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>4 & faxis<8,TFtimes>-.30 & TFtimes <.10),3),4))), ...
 %         meanRT','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>8 & faxis<11,TFtimes>-.50 & TFtimes <.0),3),4))), ...
@@ -737,8 +764,8 @@ for nCh=1:length(layout.label)-2
 %         meanRT','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>12 & faxis<16,TFtimes>-.70 & TFtimes <.0),3),4))), ...
 %         meanRT','type','spearman','rows','pairwise');
-    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
-        meanRT','type','spearman','rows','pairwise');
+%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(:,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
+%         meanRT','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end
@@ -746,7 +773,7 @@ temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 %EVOKED
-% title(['Spearmans Rho - Delta*RT, Evoked Resp-Locked, -100 - 150ms'])
+title(['Spearmans Rho - Delta*RT, Evoked Resp-Locked, -100 - 150ms'])
 % title(['Spearmans Rho - Theta*RT, Evoked Resp-Locked, -300 - 100ms'])
 % title(['Spearmans Rho - Alpha*RT, Evoked Resp-Locked, -500 - 0ms'])
 % title(['Spearmans Rho - Mu*RT, Evoked Resp-Locked, -600 - 100ms'])
@@ -757,7 +784,7 @@ simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 % title(['Spearmans Rho - Theta*RT, Induced Resp-Locked, -300 - 100ms'])
 % title(['Spearmans Rho - Alpha*RT, Induced Resp-Locked, -600 - 0ms'])
 % title(['Spearmans Rho - Mu*RT, Induced Resp-Locked, -700 - 0ms'])
-title(['Spearmans Rho - Beta*RT, Induced Resp-Locked, -600 - 0ms'])
+% title(['Spearmans Rho - Beta*RT, Induced Resp-Locked, -600 - 0ms'])
 colormap(cmap);
 colorbar; caxis([-1 1]*zvalim)
 
@@ -769,8 +796,8 @@ temp_topo=[]; temp_pV=[];
 subplot(1,2,1);
 for nCh=1:length(layout.label)-2
     %EVOKED
-%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
-%         meanAcc_young90','type','spearman','rows','pairwise');
+    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
+        meanAcc_young90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>4 & faxis<8,TFtimes>-.30 & TFtimes <.10),3),4))), ...
 %         meanAcc_young90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>8 & faxis<11,TFtimes>-.50 & TFtimes <.0),3),4))), ...
@@ -789,8 +816,8 @@ for nCh=1:length(layout.label)-2
 %         meanAcc_young90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>12 & faxis<16,TFtimes>-.70 & TFtimes <.0),3),4))), ...
 %         meanAcc_young90','type','spearman','rows','pairwise');
-    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
-        meanAcc_young90','type','spearman','rows','pairwise');
+%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
+%         meanAcc_young90','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end
@@ -804,8 +831,8 @@ colorbar; caxis([-1 1]*zvalim)
 subplot(1,2,2);
 for nCh=1:length(layout.label)-2
     %EVOKED
-%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
-%         meanAcc_old90','type','spearman','rows','pairwise');
+    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
+        meanAcc_old90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>4 & faxis<8,TFtimes>-.30 & TFtimes <.10),3),4))), ...
 %         meanAcc_old90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>8 & faxis<11,TFtimes>-.50 & TFtimes <.0),3),4))), ...
@@ -824,8 +851,8 @@ for nCh=1:length(layout.label)-2
 %         meanAcc_old90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>12 & faxis<16,TFtimes>-.70 & TFtimes <.0),3),4))), ...
 %         meanAcc_old90','type','spearman','rows','pairwise');
-    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
-        meanAcc_old90','type','spearman','rows','pairwise');
+%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
+%         meanAcc_old90','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end
@@ -845,8 +872,8 @@ temp_topo=[]; temp_pV=[];
 subplot(1,2,1);
 for nCh=1:length(layout.label)-2
     %EVOKED
-%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
-%         meanRT_young90','type','spearman','rows','pairwise');
+    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
+        meanRT_young90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>4 & faxis<8,TFtimes>-.30 & TFtimes <.10),3),4))), ...
 %         meanRT_young90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>8 & faxis<11,TFtimes>-.50 & TFtimes <.0),3),4))), ...
@@ -866,8 +893,8 @@ for nCh=1:length(layout.label)-2
 %         meanRT_young90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>12 & faxis<16,TFtimes>-.70 & TFtimes <.0),3),4))), ...
 %         meanRT_young90','type','spearman','rows','pairwise');
-    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
-        meanRT_young90','type','spearman','rows','pairwise');
+%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
+%         meanRT_young90','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end
@@ -881,8 +908,8 @@ colorbar; caxis([-1 1]*zvalim)
 subplot(1,2,2);
 for nCh=1:length(layout.label)-2
     %EVOKED
-%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
-%         meanRT_old90','type','spearman','rows','pairwise');
+    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>2 & faxis<4,TFtimes>-.10 & TFtimes <.150),3),4))), ...
+        meanRT_old90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>4 & faxis<8,TFtimes>-.30 & TFtimes <.10),3),4))), ...
 %         meanRT_old90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>8 & faxis<11,TFtimes>-.50 & TFtimes <.0),3),4))), ...
@@ -901,8 +928,8 @@ for nCh=1:length(layout.label)-2
 %         meanRT_old90','type','spearman','rows','pairwise');
 %     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>12 & faxis<16,TFtimes>-.70 & TFtimes <.0),3),4))), ...
 %         meanRT_old90','type','spearman','rows','pairwise');
-    [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
-        meanRT_old90','type','spearman','rows','pairwise');
+%     [pV,rho]=corr((squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>16 & faxis<29,TFtimes>-.60 & TFtimes <.0),3),4))), ...
+%         meanRT_old90','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end

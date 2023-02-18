@@ -21,7 +21,7 @@ absThr=250;
 nFc=0;
 n_rlockerror=0; nE=0; rlockerrors=[];
 
-for nF=80:length(files)
+for nF=1:length(files)
     file_name = files(nF).name;
     folder_name = files(nF).folder;
     SubID=file_name(1:end-4);
@@ -125,6 +125,7 @@ for nF=80:length(files)
         
         %         save([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat'],'TFRhann','newlabels'); %Variable window
         save([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_RespLocked_ERPremoved.mat'],'TFRhann_rlock_induced','newlabels'); %Fixed window
+        save([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_ERPremoved.mat'],'TFRhann_induced','newlabels'); %Fixed window
         
         %%%% evoked + induced
        cfg.toi          = -1.0:0.05:3.5;                  % time window "slides" from -0.5 to 1.5 sec in steps of 0.05 sec (50 ms)
@@ -145,7 +146,9 @@ for nF=80:length(files)
     else
 %         load([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat']); %Variable window
 %         load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_RespLocked.mat']); %Response locked, evoked
-        load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_RespLocked_ERPremoved.mat']);  %Induced, response locked
+%         load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_RespLocked_ERPremoved.mat']);  %Induced, response locked
+        load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_ERPremoved.mat']);  %Induced, stimulus locked
+
 
     end
 %   
@@ -153,7 +156,9 @@ for nF=80:length(files)
     nFc=nFc+1;
     
 %     all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_rlock.powspctrm_bsl,1)); %Response locked, evoked
-    all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_rlock_induced.powspctrm_bsl,1)); %Induced, response locked
+%     all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_rlock_induced.powspctrm_bsl,1)); %Induced, response locked
+    all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_induced.powspctrm_bsl,1)); %Induced, stimulus locked
+
 
 %     all_TFRhann(nFc,:,:,:)=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));
 %     TFtimes=TFRhann_induced.time(TFRhann_induced.time>-0.5 & TFRhann_induced.time<1.5);
@@ -184,9 +189,13 @@ end
 %%
 %All 90% participants
 % TFtimes=TFRhann_rlock.time; %Response locked, evoked
-TFtimes=TFRhann_rlock_induced.time; %Response locked, induced
+% TFtimes=TFRhann_rlock_induced.time; %Response locked, induced
+TFtimes=TFRhann_induced.time; %Stimulus locked, induced
+
 % faxis=TFRhann_rlock.freq; %Response locked, evoked
-faxis=TFRhann_rlock_induced.freq; %Response locked, induced
+% faxis=TFRhann_rlock_induced.freq; %Response locked, induced
+faxis=TFRhann_induced.freq; %Stimulus locked, induced
+
 
 myLabels={'Fz','Cz','Pz','Oz'};
 f1=figure;
@@ -298,7 +307,7 @@ end
 
  %% Topographies 25Hz tag
 cfg = [];
-cfg.layout = 'biosemi64.lay';
+cfg.layout = 'acticap-64ch-standard2.mat';
 cfg.channel=newlabels;
 cfg.center      = 'yes';
 layout=ft_prepare_layout(cfg);
@@ -315,18 +324,18 @@ cmap(cmap<0)=0;
 % faxis=TFRhann.freq
 % faxis=faxis(faxis>=min(TFRhann.freq) & faxis<=max(TFRhann.freq));
 
-subplot(1,3,1); format_fig;
-% temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>2 & faxis<4,TFtimes>.200 & TFtimes<.500),1),3),4)); %Delta
-% temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>4 & faxis<8,TFtimes>.200 & TFtimes<.600),1),3),4)); %Theta
-% temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>8 & faxis<11,TFtimes>.500 & TFtimes<1.20),1),3),4)); %Alpha
-% temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>12 & faxis<16,TFtimes>.200 & TFtimes<1.0),1),3),4)); %Mu
-temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>16 & faxis<29,TFtimes>.200 & TFtimes<1.0),1),3),4)); %Beta
-simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
-colormap(cmap);
-title('Younger 50% Coherence','FontSize',10)
-maxAbsValues=[maxAbsValues max(max(abs(temp_topo)))];
+% subplot(1,3,1); format_fig;
+% % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>2 & faxis<4,TFtimes>.200 & TFtimes<.500),1),3),4)); %Delta
+% % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>4 & faxis<8,TFtimes>.200 & TFtimes<.600),1),3),4)); %Theta
+% % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>8 & faxis<11,TFtimes>.500 & TFtimes<1.20),1),3),4)); %Alpha
+% % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>12 & faxis<16,TFtimes>.200 & TFtimes<1.0),1),3),4)); %Mu
+% temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==1|all_group==3,correspCh,faxis>16 & faxis<29,TFtimes>.200 & TFtimes<1.0),1),3),4)); %Beta
+% simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+% colormap(cmap);
+% title('Younger 50% Coherence','FontSize',10)
+% maxAbsValues=[maxAbsValues max(max(abs(temp_topo)))];
 
-subplot(1,3,2);
+subplot(1,2,1);
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==4,correspCh,faxis>2 & faxis<4,TFtimes>.200 & TFtimes<.500),1),3),4)); %Delta
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==4,correspCh,faxis>4 & faxis<8,TFtimes>.200 & TFtimes<.600),1),3),4)); %Theta
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==4,correspCh,faxis>8 & faxis<11,TFtimes>.500 & TFtimes<1.20),1),3),4)); %Alpha
@@ -336,7 +345,7 @@ simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
 title('Younger 90% Coherence','FontSize',10)
 maxAbsValues=[maxAbsValues max(max(abs(temp_topo)))];
  
-subplot(1,3,3);
+subplot(1,2,2);
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==5,correspCh,faxis>2 & faxis<4,TFtimes>.200 & TFtimes<.500),1),3),4)); %Delta
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==5,correspCh,faxis>4 & faxis<8,TFtimes>.200 & TFtimes<.600),1),3),4)); %Theta
 % temp_topo=squeeze(nanmean(nanmean(nanmean(all_TFRhann(all_group==5,correspCh,faxis>8 & faxis<11,TFtimes>.500 & TFtimes<1.20),1),3),4)); %Alpha

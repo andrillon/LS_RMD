@@ -32,7 +32,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-redo=1; complete=0;
+redo=0; complete=0;
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -41,7 +41,7 @@ redo=1; complete=0;
 absThr=250;
 nFc=0;
 
-nF=1;
+nF=70;
     file_name = files(nF).name;
     folder_name = files(nF).folder;
     SubID=file_name(1:end-4);
@@ -76,7 +76,7 @@ load([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat']);
 % all_aperiodic_component should be offset then slope
 %% Topographies 25Hz tag
 cfg = [];
-cfg.layout = 'biosemi64.lay';
+cfg.layout = 'acticap-64ch-standard2.mat';
 cfg.channel=newlabels;
 cfg.center      = 'yes';
 layout=ft_prepare_layout(cfg);
@@ -93,7 +93,8 @@ faxis=fractal.freq;
 % subplot(1,4,1);   
 % jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
 
-channels_to_plot={'Fz','Cz','Pz','Oz'};
+channels_to_plot={'Fz'};
+% channels_to_plot={'Fz','Cz','Pz','Oz'};
 figure; set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
 cmap=cbrewer('seq','OrRd',5);
@@ -106,16 +107,19 @@ xlim([2 30])
 xlabel('Frequency (Hz)')
 ylabel('Power')
 
-figure; set(gcf,'Position',[ 2104         115         788         574]);
+figure; hp=[]; set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
-cmap=cbrewer('seq','OrRd',5);
+cmap=cbrewer('seq','Blues',5);
+cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
 hold on;
-simpleTplot(faxis,squeeze(nanmean(log10(all_pow(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
-simpleTplot(faxis,squeeze(nanmean(log10(all_pow(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap(nCh+1,:),[0],':',0.1,1,0,1,1);
+[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(log10(all_pow(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(log10(all_pow(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,1,1);
 end
 xlim([2 30])
 % ylim([-.7 2])
+title(['Power Spectrum - ' channels_to_plot{1}])
+legend(hp,['Young ' channels_to_plot{1}],['Old ' channels_to_plot{1}],'Location','eastoutside');
 xlabel('Frequency (Hz)')
 ylabel('Power')
 
@@ -134,14 +138,17 @@ ylabel('Power')
 
 figure; set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
-cmap=cbrewer('seq','OrRd',5);
+cmap=cbrewer('seq','Blues',5);
+cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
 hold on;
-simpleTplot(faxis,squeeze(nanmean(log10(all_frac(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
-simpleTplot(faxis,squeeze(nanmean(log10(all_frac(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap(nCh+1,:),[0],':',0.1,1,0,1,1);
+[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(log10(all_frac(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(log10(all_frac(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,1,1);
 end
 xlim([2 30])
 % ylim([-.7 2])
+title(['Aperiodic Power Spectrum - ' channels_to_plot{1}])
+legend(hp,['Young ' channels_to_plot{1}],['Old ' channels_to_plot{1}],'Location','eastoutside');
 xlabel('Frequency (Hz)')
 ylabel('Power')
 

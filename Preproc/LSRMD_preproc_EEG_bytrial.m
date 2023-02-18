@@ -63,7 +63,12 @@ for nF=1:length(folders)
         continue;
     end
     
-    numBlocks=length(files);
+%     numBlocks=length(files);
+if strcmp(SubID,'HN977')
+        numBlocks=9;
+    else
+        numBlocks=8;
+    end
     fprintf('Processing %s...',SubID);
     tic;
     if redo==1 || exist([preproc_path filesep 'ICAcleaned_etrial_ft_' SubID '.mat'])==0
@@ -209,6 +214,7 @@ for nF=1:length(folders)
         cfg=[];
         cfg.trials          = setdiff(1:length(data.trial),badTrials);
         data = ft_preprocessing(cfg, data);
+        badTrials(badTrials>length(all_sigtrl))=[]; % Removing bad trials that are in block 9
         all_sigtrl(badTrials,:)=[];
         
         %%% Layout
@@ -226,7 +232,7 @@ for nF=1:length(folders)
             end
         end
         cfg = [];
-        cfg.layout = 'biosemi64.lay';
+        cfg.layout = 'acticap-64ch-standard2.mat';
         cfg.channel=newlabels;
         cfg.center      = 'yes';
         layout=ft_prepare_layout(cfg);
