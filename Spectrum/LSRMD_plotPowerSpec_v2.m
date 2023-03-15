@@ -41,7 +41,7 @@ redo=0; complete=0;
 absThr=250;
 nFc=0;
 
-nF=70;
+nF=1;
     file_name = files(nF).name;
     folder_name = files(nF).folder;
     SubID=file_name(1:end-4);
@@ -99,7 +99,7 @@ figure; set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
 cmap=cbrewer('seq','OrRd',5);
 for nCh=1:length(channels_to_plot)
-simpleTplot(faxis,squeeze(nanmean(log10(all_pow(:,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+simpleTplot(faxis,squeeze(nanmean(all_pow(:,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
 hold on;
 end
 xlim([2 30])
@@ -113,8 +113,8 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
 hold on;
-[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(log10(all_pow(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
-[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(log10(all_pow(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,1,1);
+[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_pow(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_pow(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,1,1);
 end
 xlim([2 30])
 % ylim([-.7 2])
@@ -128,7 +128,7 @@ figure; set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
 cmap=cbrewer('seq','OrRd',5);
 for nCh=1:length(channels_to_plot)
-simpleTplot(faxis,squeeze(nanmean(log10(all_frac(:,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+simpleTplot(faxis,squeeze(nanmean(all_frac(:,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
 hold on;
 end
 xlim([2 30])
@@ -142,8 +142,8 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
 hold on;
-[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(log10(all_frac(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
-[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(log10(all_frac(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:)),2)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,1,1);
+[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_frac(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_frac(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,1,1);
 end
 xlim([2 30])
 % ylim([-.7 2])
@@ -175,7 +175,7 @@ end
 caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
-title('Slope Aperiodic Young 90% vs Old 90%')
+% title('Slope Aperiodic Young 90% vs Old 90%')
 %% Offset
 figure; set(gcf,'Position',[213         173        1027         805/3]);
 cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
@@ -198,7 +198,7 @@ end
 caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
-title('Offset Aperiodic Young 90% vs Old 90%')
+% title('Offset Aperiodic Young 90% vs Old 90%')
 
 %% Alpha Peak Frequency
 all_alphapeak=all_peak_component(all_peak_component(:,5)>8 & all_peak_component(:,5)<13,:);
@@ -224,7 +224,7 @@ end
 caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
-title('Alpha Peak Frequency Young 90% vs Old 90%')
+% title('Alpha Peak Frequency Young 90% vs Old 90%')
 
 %% Alpha Peak Amplitude
 all_alphapeak=all_peak_component(all_peak_component(:,5)>8 & all_peak_component(:,5)<13,:);
@@ -250,7 +250,7 @@ end
 caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
-title('Alpha Peak Amplitude Young 90% vs Old 90%')
+% title('Alpha Peak Amplitude Young 90% vs Old 90%')
 
 %% Beta Peak Amplitude
 all_betapeak=all_peak_component(all_peak_component(:,5)>15 & all_peak_component(:,5)<20,:);
@@ -276,5 +276,5 @@ end
 caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
 % print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
-title('Alpha Peak Amplitude Young 90% vs Old 90%')
+% title('Beta Peak Amplitude Young 90% vs Old 90%')
 

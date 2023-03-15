@@ -42,121 +42,127 @@ absThr=250;
 nFc=0;
 all_peak_component=[];
 all_aperiodic_component=[];
-for nF=1:length(files)
-    file_name = files(nF).name;
-    folder_name = files(nF).folder;
-    SubID=file_name(1:end-4);
-    seps=findstr(SubID,'ft_');
-    SubID=SubID(seps(1)+3:end);
-    tic;
-    fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
-    
-    subj_pow=[];
-    %         subj_SNR=[];
-    %         subj_SNRtag=[];
-    
-    load([folder_name filesep file_name]);
-    
-    % fix channel names
-    mylabels=data.label;
-    for nCh=1:length(mylabels)
-        findspace=findstr(mylabels{nCh},' ');
-        if isempty(findspace)
-            newlabels{nCh}=mylabels{nCh};
-        else
-            if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
-                newlabels{nCh}=mylabels{nCh}(findspace+1:end);
+
+if redo==1
+    for nF=1:length(files)
+        file_name = files(nF).name;
+        folder_name = files(nF).folder;
+        SubID=file_name(1:end-4);
+        seps=findstr(SubID,'ft_');
+        SubID=SubID(seps(1)+3:end);
+        tic;
+        fprintf('... working on %s (%g/%g)\n',SubID,nF,length(files))
+        
+        subj_pow=[];
+        %         subj_SNR=[];
+        %         subj_SNRtag=[];
+        
+        load([folder_name filesep file_name]);
+        
+        % fix channel names
+        mylabels=data.label;
+        for nCh=1:length(mylabels)
+            findspace=findstr(mylabels{nCh},' ');
+            if isempty(findspace)
+                newlabels{nCh}=mylabels{nCh};
             else
-                newlabels{nCh}=mylabels{nCh}(1:findspace-1);
+                if ismember(mylabels{nCh}(1),{'1','2','3','4','5','6','7','8','9'})
+                    newlabels{nCh}=mylabels{nCh}(findspace+1:end);
+                else
+                    newlabels{nCh}=mylabels{nCh}(1:findspace-1);
+                end
             end
         end
-    end
-    
-    fprintf('%2.0f-%2.0f\n',0,0)
-    if size(data.trial,2)<8
-        continue;
-    end
-    
-    
-    % chunk into 10-second segments
-    cfg               = [];
-    cfg.length        = 10;
-    cfg.overlap       = 0.5;
-    data2              = ft_redefinetrial(cfg, data);
-    
-    %%%%% TRY TO REMOVE ARTEFACTS?
-    maxSignal=[];
-    for nTr=1:length(data2.trial)
-        maxSignal(nTr,:)=max(abs(data2.trial{nTr}),[],2);
-    end
-    cfg               = [];
-    absThr=250;
-    pptionThr=0.4;
-    fprintf('... ... discarding %g trials (/%g) because of %g channels above threshold of %g\n',...
-        sum(mean(maxSignal>absThr,2)>=pptionThr),length(data2.trial),100*pptionThr,absThr)
-    cfg.trials        = find(mean(maxSignal>absThr,2)<pptionThr);
-    data2              = ft_redefinetrial(cfg, data2);
-    
-    % compute the fractal and original spectra
-    cfg               = [];
-    cfg.foilim        = [2 30];
-    cfg.pad           = 'nextpow2';
-    cfg.tapsmofrq     = 0.5;
-    cfg.method        = 'mtmfft';
-    cfg.output        = 'fooof_aperiodic';
-    fractal = ft_freqanalysis(cfg, data2);
-    cfg.output        = 'pow';
-    pow = ft_freqanalysis(cfg, data2);
-    
-    nFc=nFc+1;
-    all_pow(nFc,:,:,:)=log10(pow.powspctrm);
-    if exist('subj_osci')~=0
-        all_osci(nFc,:,:,:)=subj_osci;
-    end
-    if exist('subj_mixed')~=0
-        all_mixed(nFc,:,:,:)=subj_mixed;
-    end
-%     if exist('subj_frac')~=0
+        
+        fprintf('%2.0f-%2.0f\n',0,0)
+        if size(data.trial,2)<8
+            continue;
+        end
+        
+        
+        % chunk into 10-second segments
+        cfg               = [];
+        cfg.length        = 10;
+        cfg.overlap       = 0.5;
+        data2              = ft_redefinetrial(cfg, data);
+        
+        %%%%% TRY TO REMOVE ARTEFACTS?
+        maxSignal=[];
+        for nTr=1:length(data2.trial)
+            maxSignal(nTr,:)=max(abs(data2.trial{nTr}),[],2);
+        end
+        cfg               = [];
+        absThr=250;
+        pptionThr=0.4;
+        fprintf('... ... discarding %g trials (/%g) because of %g channels above threshold of %g\n',...
+            sum(mean(maxSignal>absThr,2)>=pptionThr),length(data2.trial),100*pptionThr,absThr)
+        cfg.trials        = find(mean(maxSignal>absThr,2)<pptionThr);
+        data2              = ft_redefinetrial(cfg, data2);
+        
+        % compute the fractal and original spectra
+        cfg               = [];
+        cfg.foilim        = [2 30];
+        cfg.pad           = 'nextpow2';
+        cfg.tapsmofrq     = 0.5;
+        cfg.method        = 'mtmfft';
+        cfg.output        = 'fooof_aperiodic';
+        fractal = ft_freqanalysis(cfg, data2);
+        cfg.output        = 'pow';
+        pow = ft_freqanalysis(cfg, data2);
+        
+        nFc=nFc+1;
+        all_pow(nFc,:,:,:)=log10(pow.powspctrm);
+        if exist('subj_osci')~=0
+            all_osci(nFc,:,:,:)=subj_osci;
+        end
+        if exist('subj_mixed')~=0
+            all_mixed(nFc,:,:,:)=subj_mixed;
+        end
+        %     if exist('subj_frac')~=0
         all_frac(nFc,:,:,:)=fractal.powspctrm;
-%     end
-    
-    %     all_SNR(nF,:,:,:)=subj_SNR;
-    %     all_SNRtag(nF,:,:)=subj_SNRtag;
-    
-    
-    if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
-        thisgroup=2;
-        thisagegroup=1;
-    elseif length(SubID)==7 % YOUNG (MONASH) - DOWN 50%COH
-        thisgroup=1;
-        thisagegroup=0;
-    elseif length(SubID)==11 % YOUNG (TRINITY) - DOWN 50%COH
-        thisgroup=3;
-        thisagegroup=0;
-    elseif length(SubID)==5 && SubID(3)=='8' % YOUNG - UP & DOWN 90%COH
-        thisgroup=4;
-        thisagegroup=0;
-    elseif length(SubID)==5 && SubID(3)=='9'% OLD - UP & DOWN 90%COH
-        thisgroup=5;
-        thisagegroup=1;
-    else
-        thisgroup=NaN;
-        thisagegroup=NaN;
+        %     end
+        
+        %     all_SNR(nF,:,:,:)=subj_SNR;
+        %     all_SNRtag(nF,:,:)=subj_SNRtag;
+        
+        
+        if length(SubID)==4 && SubID(1)=='A' % OLD (MONASH) - UP & DOWN 90%COH
+            thisgroup=2;
+            thisagegroup=1;
+        elseif length(SubID)==7 % YOUNG (MONASH) - DOWN 50%COH
+            thisgroup=1;
+            thisagegroup=0;
+        elseif length(SubID)==11 % YOUNG (TRINITY) - DOWN 50%COH
+            thisgroup=3;
+            thisagegroup=0;
+        elseif length(SubID)==5 && SubID(3)=='8' % YOUNG - UP & DOWN 90%COH
+            thisgroup=4;
+            thisagegroup=0;
+        elseif length(SubID)==5 && SubID(3)=='9'% OLD - UP & DOWN 90%COH
+            thisgroup=5;
+            thisagegroup=1;
+        else
+            thisgroup=NaN;
+            thisagegroup=NaN;
+        end
+        all_group(nFc)=thisgroup; % STORE HERE THE INFO ABOUT THE GROUP
+        all_agegroup(nFc)=thisagegroup; % STORE HERE THE INFO ABOUT THE AGE GROUP
+        %     save([powerspec_path filesep 'cohorts_FFT_perBlock_byElec_ICAcleaned.mat'],'YoungM_pow','YoungM_SNR','YoungM_SNRtag','YoungT_pow','YoungT_SNR','YoungT_SNRtag','YoungHN_pow','YoungHN_SNR','YoungHN_SNRtag',...
+        %          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
+        
+        table_fractal=fractal.fooofparams;
+        for k=1:length(fractal.label)
+            all_aperiodic_component=[all_aperiodic_component ; [nFc all_group(nFc) all_agegroup(nFc) k fractal.fooofparams(k).aperiodic_params]];
+            all_peak_component=[all_peak_component ; [repmat([nFc all_group(nFc) all_agegroup(nFc) k],size(fractal.fooofparams(k).peak_params,1),1) fractal.fooofparams(k).peak_params]];
+        end
+        
+        
     end
-    all_group(nFc)=thisgroup; % STORE HERE THE INFO ABOUT THE GROUP
-    all_agegroup(nFc)=thisagegroup; % STORE HERE THE INFO ABOUT THE AGE GROUP
-    %     save([powerspec_path filesep 'cohorts_FFT_perBlock_byElec_ICAcleaned.mat'],'YoungM_pow','YoungM_SNR','YoungM_SNRtag','YoungT_pow','YoungT_SNR','YoungT_SNRtag','YoungHN_pow','YoungHN_SNR','YoungHN_SNRtag',...
-    %          'OldA_pow','OldA_SNR','OldA_SNRtag','OldHN_pow','OldHN_SNR','OldHN_SNRtag');
+    save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'all_pow','all_group','all_agegroup','all_peak_component','all_aperiodic_component','all_frac','fractal','newlabels');
     
-    table_fractal=fractal.fooofparams;
-    for k=1:length(fractal.label)
-        all_aperiodic_component=[all_aperiodic_component ; [nFc all_group(nFc) all_agegroup(nFc) k fractal.fooofparams(k).aperiodic_params]];
-        all_peak_component=[all_peak_component ; [repmat([nFc all_group(nFc) all_agegroup(nFc) k],size(fractal.fooofparams(k).peak_params,1),1) fractal.fooofparams(k).peak_params]];
-    end
-    
-    
+else
+    load([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat']);
 end
-save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'all_pow','all_group','all_agegroup','all_peak_component','all_aperiodic_component','all_frac','fractal');
 
 %% Topographies 25Hz tag
 cfg = [];
@@ -181,11 +187,52 @@ figure; set(gcf,'Position',[213         173        1027/4         805/3]);
 % jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
 format_fig;
 hold on;
-simpleTplot(faxis,squeeze(nanmean(all_pow(:,match_str(fractal.label,'Cz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+% simpleTplot(faxis,squeeze(nanmean(all_pow(:,match_str(fractal.label,'Cz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1); % DP - original, don't think use of fractal correct
+simpleTplot(faxis,squeeze(nanmean(all_pow(:,match_str(layout.label,'Cz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
 xlim([2 30])
 % ylim([-.7 2])
 xlabel('Frequency (Hz)')
 ylabel('Power')
+
+%% Delta 1-3Hz
+
+figure; set(gcf,'Position',[213         173        1027         805/3]);
+cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap(cmap<0)=0;
+
+for nD=1:2
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+    temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>1 & faxis<3),1),3)); %Delta
+    simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
+%     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
+    colormap(cmap);
+    if nD==1
+        hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+        title('Delta Young')
+    else
+        title('Delta Old')
+    end
+end
+
+%% Theta 4-7Hz
+
+figure; set(gcf,'Position',[213         173        1027         805/3]);
+cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap(cmap<0)=0;
+
+for nD=1:2
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+    temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>4 & faxis<7),1),3)); %Theta
+    simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
+%     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
+    colormap(cmap);
+    if nD==1
+        hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+        title('Theta Young')
+    else
+        title('Theta Old')
+    end
+end
 
 %% Alpha 8-11Hz
 
@@ -193,32 +240,43 @@ figure; set(gcf,'Position',[213         173        1027         805/3]);
 cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
 cmap(cmap<0)=0;
 
-% DP 3/2/22 - tried extracting from loop but still didn't create subplot. Maybe issue with overlapping plots being overwritten?
-% subplot(1,2,1); format_fig;
-% temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==0,:,correspCh,faxis>8 & faxis<11),1),2),4));
-% simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
-% colormap(cmap);
-% hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
-% hold on
-%
-% subplot(1,2,2); format_fig;
-% temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==1,:,correspCh,faxis>8 & faxis<11),1),2),4));
-% simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
-% colormap(cmap);
-
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
     %     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>1 & faxis<3),1),2),4)); %Delta
     %     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>4 & faxis<7),1),2),4)); %Theta
-    temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh,faxis>8 & faxis<11),1),2),4)); %Alpha
+        %     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>8 & faxis<11),1),2),4)); %Alpha % DP - this was the original layout but I think it is incorrect
+    temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>8 & faxis<11),1),3)); %Alpha
     %     temp_topo=squeeze(nanmean(nanmean(nanmean(all_pow(all_agegroup==nD-1,:,correspCh,faxis>12 & faxis<29),1),2),4)); %Beta
-    simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1);
+    simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
+%     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
     colormap(cmap);
     if nD==1
         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+        title('Alpha Young')
+    else
+        title('Alpha Old')
     end
 end
-% print([powerspec_path filesep 'Topo_Alpha_v5.eps'],'-dpng', '-r300');
+
+%% Beta 12-29Hz
+
+figure; set(gcf,'Position',[213         173        1027         805/3]);
+cmap=cbrewer('seq','YlOrRd',64); % select a sequential colorscale from yellow to red (64)
+cmap(cmap<0)=0;
+
+for nD=1:2
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+    temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>12 & faxis<29),1),3)); %Beta
+    simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
+%     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
+    colormap(cmap);
+    if nD==1
+        hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+        title('Beta Young')
+    else
+        title('Beta Old')
+    end
+end
 
 %% Aperiodic component
 figure; set(gcf,'Position',[213         173        1027         805/3]);
@@ -230,10 +288,11 @@ agegroups={[4],[5]}; % Young vs Old
 for nD=1:2
     temp_topo=[];
     for nCh=1:length(fractal.label)
-        temp_topo(nCh)=squeeze(nanmean(all_aperiodic_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==nCh,5),1)); %Alpha
+        temp_topo(nCh)=squeeze(nanmean(all_aperiodic_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==nCh,5),1));
     end
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    simpleTopoPlot_ft(temp_topo(correspCh2), layout,'on',[],0,1);
+%     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout. If I change to fractal, error
+    simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
     %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
@@ -244,16 +303,21 @@ for nD=1:2
     elseif nD==2
         title('Offset Old')
     end
+    
+    maxmin(nD,1)=min((temp_topo));
+    maxmin(nD,2)=max((temp_topo));
 end
+caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 
 figure;
 for nD=1:2
     temp_topo=[];
     for nCh=1:length(fractal.label)
-        temp_topo(nCh)=squeeze(nanmean(all_aperiodic_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==nCh,6),1)); %Alpha
+        temp_topo(nCh)=squeeze(nanmean(all_aperiodic_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==nCh,6),1));
     end
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    simpleTopoPlot_ft(temp_topo(correspCh2), layout,'on',[],0,1);
+%     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
     %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
@@ -264,7 +328,10 @@ for nD=1:2
     elseif nD==2
         title('Slope Old')
     end
+    maxmin(nD,1)=min((temp_topo));
+    maxmin(nD,2)=max((temp_topo));
 end
+caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 
 %% Analysis of peaks
 figure;
@@ -279,10 +346,108 @@ for nCh=1:length(myLabels)
     ylabel('Count peaks')
     format_fig;
     legend({'Young','Old'})
+    title(['Peaks ' myLabels{nCh}])
 end
 
-all_alphapeak_component=all_peak_component(all_peak_component(:,5)>8 & all_peak_component(:,5)<13,:);
+%% Delta peaks (1-3Hz)
 
+all_deltapeak_component=all_peak_component(all_peak_component(:,5)>1 & all_peak_component(:,5)<3,:);
+
+figure;
+agegroups={[4],[5]}; % Young vs Old
+for nD=1:2
+    temp_topo=[];
+    for nCh=1:length(fractal.label)
+        temp_topo(nCh)=squeeze(nanmean(all_deltapeak_component(all_deltapeak_component(:,2)==agegroups{nD} & all_deltapeak_component(:,4)==nCh,5),1)); %Alpha
+    end
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+%     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
+    colormap(cmap);
+    %     if nD==1
+    %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+    %     end
+    colorbar;
+    if nD==1
+        title('Delta Freq Young')
+    elseif nD==2
+        title('Delta Freq Old')
+    end
+end
+
+figure;
+for nD=1:2
+    temp_topo=[];
+    for nCh=1:length(fractal.label)
+        temp_topo(nCh)=squeeze(nanmean(all_deltapeak_component(all_deltapeak_component(:,2)==agegroups{nD} & all_deltapeak_component(:,4)==nCh,7),1)); %Alpha
+    end
+    subplot(1,2,nD); format_fig;
+%     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
+    colormap(cmap);
+    %     if nD==1
+    %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+    %     end
+    colorbar;
+    if nD==1
+        title('Delta Peak Amplitude Young')
+    elseif nD==2
+        title('Delta Peak Amplitude Old')
+    end
+end
+
+%% Theta peaks (4-7Hz)
+
+all_thetapeak_component=all_peak_component(all_peak_component(:,5)>4 & all_peak_component(:,5)<7,:);
+
+figure;
+agegroups={[4],[5]}; % Young vs Old
+for nD=1:2
+    temp_topo=[];
+    for nCh=1:length(fractal.label)
+        temp_topo(nCh)=squeeze(nanmean(all_thetapeak_component(all_thetapeak_component(:,2)==agegroups{nD} & all_thetapeak_component(:,4)==nCh,5),1)); %Alpha
+    end
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+%     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
+    colormap(cmap);
+    %     if nD==1
+    %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+    %     end
+    colorbar;
+    if nD==1
+        title('Theta Freq Young')
+    elseif nD==2
+        title('Theta Freq Old')
+    end
+end
+
+figure;
+for nD=1:2
+    temp_topo=[];
+    for nCh=1:length(fractal.label)
+        temp_topo(nCh)=squeeze(nanmean(all_thetapeak_component(all_thetapeak_component(:,2)==agegroups{nD} & all_thetapeak_component(:,4)==nCh,7),1)); %Alpha
+    end
+    subplot(1,2,nD); format_fig;
+%     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
+    colormap(cmap);
+    %     if nD==1
+    %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+    %     end
+    colorbar;
+    if nD==1
+        title('Theta Peak Amplitude Young')
+    elseif nD==2
+        title('Theta Peak Amplitude Old')
+    end
+end
+
+%% Alpha peaks (8-11Hz)
+
+all_alphapeak_component=all_peak_component(all_peak_component(:,5)>8 & all_peak_component(:,5)<11,:);
+
+figure;
 agegroups={[4],[5]}; % Young vs Old
 for nD=1:2
     temp_topo=[];
@@ -290,7 +455,8 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_alphapeak_component(all_alphapeak_component(:,2)==agegroups{nD} & all_alphapeak_component(:,4)==nCh,5),1)); %Alpha
     end
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    simpleTopoPlot_ft(temp_topo(correspCh2), layout,'on',[],0,1);
+%     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
     %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
@@ -309,8 +475,9 @@ for nD=1:2
     for nCh=1:length(fractal.label)
         temp_topo(nCh)=squeeze(nanmean(all_alphapeak_component(all_alphapeak_component(:,2)==agegroups{nD} & all_alphapeak_component(:,4)==nCh,7),1)); %Alpha
     end
-    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    simpleTopoPlot_ft(temp_topo(correspCh2), layout,'on',[],0,1);
+    subplot(1,2,nD); format_fig;
+%     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
     %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
@@ -320,6 +487,53 @@ for nD=1:2
         title('Alpha Peak Amplitude Young')
     elseif nD==2
         title('Alpha Peak Amplitude Old')
+    end
+end
+
+%% Beta peaks (12-29Hz)
+
+all_betapeak_component=all_peak_component(all_peak_component(:,5)>12 & all_peak_component(:,5)<29,:);
+
+figure;
+agegroups={[4],[5]}; % Young vs Old
+for nD=1:2
+    temp_topo=[];
+    for nCh=1:length(fractal.label)
+        temp_topo(nCh)=squeeze(nanmean(all_betapeak_component(all_betapeak_component(:,2)==agegroups{nD} & all_betapeak_component(:,4)==nCh,5),1)); %Alpha
+    end
+    subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
+%     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
+    colormap(cmap);
+    %     if nD==1
+    %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+    %     end
+    colorbar;
+    if nD==1
+        title('Beta Freq Young')
+    elseif nD==2
+        title('Beta Freq Old')
+    end
+end
+
+figure;
+for nD=1:2
+    temp_topo=[];
+    for nCh=1:length(fractal.label)
+        temp_topo(nCh)=squeeze(nanmean(all_betapeak_component(all_betapeak_component(:,2)==agegroups{nD} & all_betapeak_component(:,4)==nCh,7),1)); %Alpha
+    end
+    subplot(1,2,nD); format_fig;
+%     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
+    colormap(cmap);
+    %     if nD==1
+    %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+    %     end
+    colorbar;
+    if nD==1
+        title('Beta Peak Amplitude Young')
+    elseif nD==2
+        title('Beta Peak Amplitude Old')
     end
 end
 
