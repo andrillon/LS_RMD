@@ -32,7 +32,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-redo=0; complete=0;
+redo=1; complete=0;
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -42,7 +42,7 @@ absThr=250;
 nFc=0;
 all_peak_component=[];
 all_aperiodic_component=[];
-
+all_detectedpeaks=[];
 if redo==1
     for nF=1:length(files)
         file_name = files(nF).name;
@@ -106,20 +106,25 @@ if redo==1
         cfg.tapsmofrq     = 0.5;
         cfg.method        = 'mtmfft';
         cfg.output        = 'fooof_aperiodic';
+        cfg.fooof.max_peaks = 4;
+        cfg.fooof.proximity_threshold = 1;
         fractal = ft_freqanalysis(cfg, data2);
         cfg.output        = 'pow';
         pow = ft_freqanalysis(cfg, data2);
+        cfg.output        = 'fooof_peaks';
+        pow_peaks = ft_freqanalysis(cfg, data2);
         
         nFc=nFc+1;
         all_pow(nFc,:,:,:)=log10(pow.powspctrm);
-        if exist('subj_osci')~=0
-            all_osci(nFc,:,:,:)=subj_osci;
-        end
-        if exist('subj_mixed')~=0
-            all_mixed(nFc,:,:,:)=subj_mixed;
-        end
+%         if exist('subj_osci')~=0
+%             all_osci(nFc,:,:,:)=subj_osci;
+%         end
+%         if exist('subj_mixed')~=0
+%             all_mixed(nFc,:,:,:)=subj_mixed;
+%         end
         %     if exist('subj_frac')~=0
         all_frac(nFc,:,:,:)=fractal.powspctrm;
+        all_osci(nFc,:,:,:)=pow_peaks.powspctrm;
         %     end
         
         %     all_SNR(nF,:,:,:)=subj_SNR;
@@ -154,11 +159,20 @@ if redo==1
         for k=1:length(fractal.label)
             all_aperiodic_component=[all_aperiodic_component ; [nFc all_group(nFc) all_agegroup(nFc) k fractal.fooofparams(k).aperiodic_params]];
             all_peak_component=[all_peak_component ; [repmat([nFc all_group(nFc) all_agegroup(nFc) k],size(fractal.fooofparams(k).peak_params,1),1) fractal.fooofparams(k).peak_params]];
+            
+            if ~isempty(fractal.fooofparams(k).peak_params)
+            is_alphapeak=sum(fractal.fooofparams(k).peak_params(:,1)>8 & fractal.fooofparams(k).peak_params(:,1)<12);
+            is_slowpeak=sum(fractal.fooofparams(k).peak_params(:,1)<7);
+            
+            all_detectedpeaks=[all_detectedpeaks ; [nFc all_group(nFc) all_agegroup(nFc) k is_alphapeak is_slowpeak]];
+            else
+            all_detectedpeaks=[all_detectedpeaks ; [nFc all_group(nFc) all_agegroup(nFc) k 0 0]];
+            end
         end
         
         
     end
-    save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'all_pow','all_group','all_agegroup','all_peak_component','all_aperiodic_component','all_frac','fractal','newlabels');
+    save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'all_pow','all_group','all_agegroup','all_peak_component','all_aperiodic_component','all_frac','fractal','newlabels','all_osci');
     
 else
     load([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat']);
@@ -379,7 +393,7 @@ figure;
 for nD=1:2
     temp_topo=[];
     for nCh=1:length(fractal.label)
-        temp_topo(nCh)=squeeze(nanmean(all_deltapeak_component(all_deltapeak_component(:,2)==agegroups{nD} & all_deltapeak_component(:,4)==nCh,7),1)); %Alpha
+        temp_topo(nCh)=squeeze(nanmean(all_deltapeak_component(all_deltapeak_component(:,2)==agegroups{nD} & all_deltapeak_component(:,4)==nCh,6),1)); %Alpha
     end
     subplot(1,2,nD); format_fig;
 %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
@@ -426,7 +440,7 @@ figure;
 for nD=1:2
     temp_topo=[];
     for nCh=1:length(fractal.label)
-        temp_topo(nCh)=squeeze(nanmean(all_thetapeak_component(all_thetapeak_component(:,2)==agegroups{nD} & all_thetapeak_component(:,4)==nCh,7),1)); %Alpha
+        temp_topo(nCh)=squeeze(nanmean(all_thetapeak_component(all_thetapeak_component(:,2)==agegroups{nD} & all_thetapeak_component(:,4)==nCh,6),1)); %Alpha
     end
     subplot(1,2,nD); format_fig;
 %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
@@ -473,7 +487,7 @@ figure;
 for nD=1:2
     temp_topo=[];
     for nCh=1:length(fractal.label)
-        temp_topo(nCh)=squeeze(nanmean(all_alphapeak_component(all_alphapeak_component(:,2)==agegroups{nD} & all_alphapeak_component(:,4)==nCh,7),1)); %Alpha
+        temp_topo(nCh)=squeeze(nanmean(all_alphapeak_component(all_alphapeak_component(:,2)==agegroups{nD} & all_alphapeak_component(:,4)==nCh,6),1)); %Alpha
     end
     subplot(1,2,nD); format_fig;
 %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
@@ -520,7 +534,7 @@ figure;
 for nD=1:2
     temp_topo=[];
     for nCh=1:length(fractal.label)
-        temp_topo(nCh)=squeeze(nanmean(all_betapeak_component(all_betapeak_component(:,2)==agegroups{nD} & all_betapeak_component(:,4)==nCh,7),1)); %Alpha
+        temp_topo(nCh)=squeeze(nanmean(all_betapeak_component(all_betapeak_component(:,2)==agegroups{nD} & all_betapeak_component(:,4)==nCh,6),1)); %Alpha
     end
     subplot(1,2,nD); format_fig;
 %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
