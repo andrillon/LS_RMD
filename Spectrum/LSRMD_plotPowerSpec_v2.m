@@ -86,14 +86,14 @@ for nCh=1:length(layout.label)-2
 end
 
 
-%%
+%% Mixed
 cmap2=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
 cmap2=flipud(cmap2);
 faxis=fractal.freq;
 % subplot(1,4,1);   
 % jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
 
-channels_to_plot={'Fz'};
+channels_to_plot={'Cz'};
 % channels_to_plot={'Fz','Cz','Pz','Oz'};
 figure; set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
@@ -119,6 +119,35 @@ end
 xlim([2 30])
 % ylim([-.7 2])
 title(['Power Spectrum - ' channels_to_plot{1}])
+legend(hp,['Young ' channels_to_plot{1}],['Old ' channels_to_plot{1}],'Location','eastoutside');
+xlabel('Frequency (Hz)')
+ylabel('Power')
+
+%% Oscillatory activity
+figure; set(gcf,'Position',[ 2104         115         788         574]);
+format_fig;
+cmap=cbrewer('seq','OrRd',5);
+for nCh=1:length(channels_to_plot)
+simpleTplot(faxis,squeeze(nanmean(all_osci(:,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+hold on;
+end
+xlim([2 30])
+% ylim([-.7 2])
+xlabel('Frequency (Hz)')
+ylabel('Power')
+
+figure; set(gcf,'Position',[ 2104         115         788         574]);
+format_fig;
+cmap=cbrewer('seq','Blues',5);
+cmap2=cbrewer('seq','Oranges',5);
+for nCh=1:length(channels_to_plot)
+hold on;
+[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_osci(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_osci(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,1,1);
+end
+xlim([2 30])
+% ylim([-.7 2])
+title(['Oscillatory Power Spectrum - ' channels_to_plot{1}])
 legend(hp,['Young ' channels_to_plot{1}],['Old ' channels_to_plot{1}],'Location','eastoutside');
 xlabel('Frequency (Hz)')
 ylabel('Power')
