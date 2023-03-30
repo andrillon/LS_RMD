@@ -32,7 +32,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-redo=1; complete=0;
+redo=0; complete=0;
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -218,16 +218,17 @@ cmap(cmap<0)=0;
 
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>1 & faxis<3),1),3)); %Delta
-    %     temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>1 & faxis<3),1),3)); %Delta
+%     temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>1 & faxis<3),1),3)); %Delta
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>1 & faxis<3),1),3)); %Delta
     simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
     %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
     colormap(cmap);
     if nD==1
-        hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
         title('Delta Young')
+        hb=colorbar;
     else
         title('Delta Old')
+        hb=colorbar;
     end
     maxmin(nD,1)=min((temp_topo));
     maxmin(nD,2)=max((temp_topo));
@@ -235,15 +236,19 @@ end
 caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 
 figure; format_fig;
-youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>1 & faxis<3),1),3));
-oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>1 & faxis<3),1),3));
-% youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>1 & faxis<3),1),3));
-% oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>1 & faxis<3),1),3));
+% youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>1 & faxis<3),1),3));
+% oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>1 & faxis<3),1),3));
+youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>1 & faxis<3),1),3));
+oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>1 & faxis<3),1),3));
 difftopo=oldtopo-youngtopo;
 simpleTopoPlot_ft(difftopo(correspCh), layout,'on',[],0,1);
 %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
-colormap(cmap);
-hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+caxis([-0.5,0.5]); % pow
+caxis([-2.5,2.5]); % osci
+    colormap(parula);
+
+hb=colorbar;
+
 
 %% Theta 4-7Hz
 
@@ -253,16 +258,17 @@ cmap(cmap<0)=0;
 
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>4 & faxis<7),1),3)); %Theta
-    %     temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>4 & faxis<7),1),3)); %Theta
+%     temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>4 & faxis<7),1),3)); %Theta
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>4 & faxis<7),1),3)); %Theta
     simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
     %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
     colormap(cmap);
     if nD==1
-        hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+        hb=colorbar;
         title('Theta Young')
     else
         title('Theta Old')
+        hb=colorbar;
     end
     maxmin(nD,1)=min((temp_topo));
     maxmin(nD,2)=max((temp_topo));
@@ -270,15 +276,17 @@ end
 caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 
 figure; format_fig;
-youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>4 & faxis<7),1),3));
-oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>4 & faxis<7),1),3));
-% youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>4 & faxis<7),1),3));
-% oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>4 & faxis<7),1),3));
+% youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>4 & faxis<7),1),3));
+% oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>4 & faxis<7),1),3));
+youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>4 & faxis<7),1),3));
+oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>4 & faxis<7),1),3));
 difftopo=oldtopo-youngtopo;
 simpleTopoPlot_ft(difftopo(correspCh), layout,'on',[],0,1);
 %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
-colormap(cmap);
-hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+caxis([-0.5,0.5]); % pow
+caxis([-2.5,2.5]); % osci
+    colormap(parula);
+    hb=colorbar;
 
 %% Alpha 8-11Hz
 
@@ -288,16 +296,17 @@ cmap(cmap<0)=0;
 
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>8 & faxis<11),1),3)); %Alpha
-    %     temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>8 & faxis<11),1),3)); %Alpha
+%     temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>8 & faxis<11),1),3)); %Alpha
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>8 & faxis<11),1),3)); %Alpha
     simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
     %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
     colormap(cmap);
     if nD==1
-        hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+        hb=colorbar;
         title('Alpha Young')
     else
         title('Alpha Old')
+        hb=colorbar;
     end
     maxmin(nD,1)=min((temp_topo));
     maxmin(nD,2)=max((temp_topo));
@@ -305,15 +314,17 @@ end
 caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 
 figure; format_fig;
-youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>8 & faxis<11),1),3));
-oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>8 & faxis<11),1),3));
-% youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>8 & faxis<11),1),3));
-% oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>8 & faxis<11),1),3));
+% youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>8 & faxis<11),1),3));
+% oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>8 & faxis<11),1),3));
+youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>8 & faxis<11),1),3));
+oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>8 & faxis<11),1),3));
 difftopo=oldtopo-youngtopo;
 simpleTopoPlot_ft(difftopo(correspCh), layout,'on',[],0,1);
 %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
-colormap(cmap);
-hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+caxis([-0.5,0.5]); % pow
+caxis([-2.5,2.5]); % osci
+    colormap(parula);
+    hb=colorbar;
 
 %% Beta 12-29Hz
 
@@ -323,16 +334,18 @@ cmap(cmap<0)=0;
 
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>12 & faxis<29),1),3)); %Beta
-    %     temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>12 & faxis<29),1),3)); %Beta
+%     temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>12 & faxis<29),1),3)); %Beta
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>12 & faxis<29),1),3)); %Beta
     simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
     %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
     colormap(cmap);
     if nD==1
-        hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+        hb=colorbar;
         title('Beta Young')
+        hb=colorbar;
     else
         title('Beta Old')
+        hb=colorbar;
     end
     maxmin(nD,1)=min((temp_topo));
     maxmin(nD,2)=max((temp_topo));
@@ -340,15 +353,17 @@ end
 caxis([min(maxmin(:,1)) max(maxmin(:,2))])
 
 figure; format_fig;
-youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>12 & faxis<29),1),3));
-oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>12 & faxis<29),1),3));
-% youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>12 & faxis<29),1),3));
-% oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>12 & faxis<29),1),3));
+% youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>12 & faxis<29),1),3));
+% oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>12 & faxis<29),1),3));
+youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>12 & faxis<29),1),3));
+oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>12 & faxis<29),1),3));
 difftopo=oldtopo-youngtopo;
 simpleTopoPlot_ft(difftopo(correspCh), layout,'on',[],0,1);
 %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
-colormap(cmap);
-hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
+caxis([-0.5,0.5]); % pow
+caxis([-2.5,2.5]); % osci
+    colormap(parula);
+    hb=colorbar;
 
 %% Aperiodic component
 figure; set(gcf,'Position',[213         173        1027         805/3]);
@@ -369,11 +384,13 @@ for nD=1:2
     %     if nD==1
     %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
     %     end
-    colorbar;
+    
     if nD==1
         title('Offset Young')
+        hb=colorbar;
     elseif nD==2
         title('Offset Old')
+        hb=colorbar;
     end
     
     maxmin(nD,1)=min((temp_topo));
@@ -389,8 +406,9 @@ for nCh=1:length(fractal.label)
 end
 difftopo=oldtopo-youngtopo;
 simpleTopoPlot_ft(difftopo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
-colormap(cmap);
-%     if nD==1
+caxis([-0.5,0.5]);
+    colormap(parula);
+    %     if nD==1
 %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
 %     end
 colorbar;
@@ -411,8 +429,10 @@ for nD=1:2
     colorbar;
     if nD==1
         title('Slope Young')
+        hb=colorbar;
     elseif nD==2
         title('Slope Old')
+        hb=colorbar;
     end
     maxmin(nD,1)=min((temp_topo));
     maxmin(nD,2)=max((temp_topo));
@@ -427,8 +447,9 @@ for nCh=1:length(fractal.label)
 end
 difftopo=oldtopo-youngtopo;
 simpleTopoPlot_ft(difftopo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
-colormap(cmap);
-%     if nD==1
+caxis([-0.5,0.5]);
+    colormap(parula);
+    %     if nD==1
 %         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
 %     end
 colorbar;

@@ -113,8 +113,8 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
 hold on;
-[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_pow(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
-[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_pow(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,1,1);
+[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_pow(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.3,1,0,1,1);
+[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_pow(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.3,1,0,1,1);
 end
 xlim([2 30])
 % ylim([-.7 2])
@@ -128,7 +128,7 @@ figure; set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
 cmap=cbrewer('seq','OrRd',5);
 for nCh=1:length(channels_to_plot)
-simpleTplot(faxis,squeeze(nanmean(all_osci(:,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+simpleTplot(faxis,squeeze(nanmean(all_osci(:,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.3,1,0,1,1);
 hold on;
 end
 xlim([2 30])
@@ -142,8 +142,8 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
 hold on;
-[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_osci(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
-[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_osci(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,1,1);
+[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_osci(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.3,1,0,1,1);
+[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_osci(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.3,1,0,1,1);
 end
 xlim([2 30])
 % ylim([-.7 2])
@@ -157,7 +157,7 @@ figure; set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
 cmap=cbrewer('seq','OrRd',5);
 for nCh=1:length(channels_to_plot)
-simpleTplot(faxis,squeeze(nanmean(all_frac(:,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
+simpleTplot(faxis,squeeze(nanmean(all_frac(:,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.3,1,0,1,1);
 hold on;
 end
 xlim([2 30])
@@ -171,8 +171,8 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
 hold on;
-[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_frac(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.1,1,0,1,1);
-[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_frac(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.1,1,0,1,1);
+[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_frac(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.3,1,0,1,1);
+[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_frac(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.3,1,0,1,1);
 end
 xlim([2 30])
 % ylim([-.7 2])
