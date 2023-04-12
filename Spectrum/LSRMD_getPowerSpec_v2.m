@@ -32,7 +32,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-redo=0; complete=0; mix_or_osci=1; %0 = mixed, 1 = oscillatory
+redo=1; complete=0; mix_or_osci=1; %0 = mixed, 1 = oscillatory
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -185,10 +185,8 @@ cfg.channel=newlabels;
 cfg.center      = 'yes';
 layout=ft_prepare_layout(cfg);
 correspCh=[];
-correspCh2=[];
 for nCh=1:length(layout.label)-2
     correspCh(nCh)=match_str(newlabels,layout.label(nCh));
-    correspCh2(nCh)=match_str(newlabels,fractal.label(nCh));
 end
 
 
@@ -203,7 +201,11 @@ format_fig;
 hold on;
 % simpleTplot(faxis,squeeze(nanmean(all_pow(:,match_str(fractal.label,'Cz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1); % DP - original, don't think use of fractal correct
 % simpleTplot(faxis,squeeze(nanmean(all_pow(:,match_str(layout.label,'Cz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
-simpleTplot(faxis,squeeze(nanmean(all_osci(:,match_str(layout.label,'Cz'),:),2)),0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+temp_tplot=squeeze(nanmean(all_osci(:,match_str(newlabels,'Cz'),:),2));
+temp_faxis=faxis;
+temp_faxis(sum(isnan(temp_tplot),1)>0)=[];
+temp_tplot(:,sum(isnan(temp_tplot),1)>0)=[];
+simpleTplot(temp_faxis,temp_tplot,0,'k',[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
 
 xlim([2 30])
 % ylim([-.7 2])
@@ -218,9 +220,9 @@ cmap(cmap<0)=0;
 
 for nD=1:2
     if mix_or_osci==0
-        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>1 & faxis<3),1),3)); %Delta
+        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh,faxis>1 & faxis<3),1),3)); %Delta
     else
-        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>1 & faxis<3),1),3)); %Delta
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh,faxis>1 & faxis<3),1),3)); %Delta
     end
     maxmin(nD,1)=min((temp_topo));
     maxmin(nD,2)=max((temp_topo));
@@ -229,9 +231,9 @@ end
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
     if mix_or_osci==0
-        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>1 & faxis<3),1),3)); %Delta
+        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh,faxis>1 & faxis<3),1),3)); %Delta
     else
-        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>1 & faxis<3),1),3)); %Delta
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh,faxis>1 & faxis<3),1),3)); %Delta
     end
     simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
     caxis([min(maxmin(:,1)) max(maxmin(:,2))])
@@ -259,11 +261,11 @@ end
 
 figure; format_fig;
 if mix_or_osci==0
-    youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>1 & faxis<3),1),3));
-    oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>1 & faxis<3),1),3));
+    youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh,faxis>1 & faxis<3),1),3));
+    oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh,faxis>1 & faxis<3),1),3));
 else
-    youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>1 & faxis<3),1),3));
-    oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>1 & faxis<3),1),3));
+    youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh,faxis>1 & faxis<3),1),3));
+    oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh,faxis>1 & faxis<3),1),3));
 end
 difftopo=oldtopo-youngtopo;
 simpleTopoPlot_ft(difftopo(correspCh), layout,'on',[],0,1);
@@ -287,9 +289,9 @@ cmap(cmap<0)=0;
 
 for nD=1:2
     if mix_or_osci==0
-        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>4 & faxis<7),1),3)); %Theta
+        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh,faxis>4 & faxis<7),1),3)); %Theta
     else
-        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>4 & faxis<7),1),3)); %Theta
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh,faxis>4 & faxis<7),1),3)); %Theta
     end
     maxmin(nD,1)=min((temp_topo));
     maxmin(nD,2)=max((temp_topo));
@@ -298,9 +300,9 @@ end
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
     if mix_or_osci==0
-        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>4 & faxis<7),1),3)); %Theta
+        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh,faxis>4 & faxis<7),1),3)); %Theta
     else
-        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>4 & faxis<7),1),3)); %Theta
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh,faxis>4 & faxis<7),1),3)); %Theta
     end
     simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
     %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
@@ -328,11 +330,11 @@ end
 
 figure; format_fig;
 if mix_or_osci==0
-    youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>4 & faxis<7),1),3));
-    oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>4 & faxis<7),1),3));
+    youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh,faxis>4 & faxis<7),1),3));
+    oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh,faxis>4 & faxis<7),1),3));
 else
-    youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>4 & faxis<7),1),3));
-    oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>4 & faxis<7),1),3));
+    youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh,faxis>4 & faxis<7),1),3));
+    oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh,faxis>4 & faxis<7),1),3));
 end
 difftopo=oldtopo-youngtopo;
 simpleTopoPlot_ft(difftopo(correspCh), layout,'on',[],0,1);
@@ -355,9 +357,9 @@ cmap(cmap<0)=0;
 
 for nD=1:2
     if mix_or_osci==0
-        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>8 & faxis<11),1),3)); %Alpha
+        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh,faxis>8 & faxis<11),1),3)); %Alpha
     else
-        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>8 & faxis<11),1),3)); %Alpha
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh,faxis>8 & faxis<11),1),3)); %Alpha
     end
     maxmin(nD,1)=min((temp_topo));
     maxmin(nD,2)=max((temp_topo));
@@ -366,9 +368,9 @@ end
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
     if mix_or_osci==0
-        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>8 & faxis<11),1),3)); %Alpha
+        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh,faxis>8 & faxis<11),1),3)); %Alpha
     else
-        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>8 & faxis<11),1),3)); %Alpha
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh,faxis>8 & faxis<11),1),3)); %Alpha
     end
     simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
     %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
@@ -395,11 +397,11 @@ end
 
 figure; format_fig;
 if mix_or_osci==0
-    youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>8 & faxis<11),1),3));
-    oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>8 & faxis<11),1),3));
+    youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh,faxis>8 & faxis<11),1),3));
+    oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh,faxis>8 & faxis<11),1),3));
 else
-    youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>8 & faxis<11),1),3));
-    oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>8 & faxis<11),1),3));
+    youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh,faxis>8 & faxis<11),1),3));
+    oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh,faxis>8 & faxis<11),1),3));
 end
 difftopo=oldtopo-youngtopo;
 simpleTopoPlot_ft(difftopo(correspCh), layout,'on',[],0,1);
@@ -422,9 +424,9 @@ cmap(cmap<0)=0;
 
 for nD=1:2
     if mix_or_osci==0
-        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>12 & faxis<29),1),3)); %Beta
+        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh,faxis>12 & faxis<29),1),3)); %Beta
     else
-        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>12 & faxis<29),1),3)); %Beta
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh,faxis>12 & faxis<29),1),3)); %Beta
     end
     maxmin(nD,1)=min((temp_topo));
     maxmin(nD,2)=max((temp_topo));
@@ -433,9 +435,9 @@ end
 for nD=1:2
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
     if mix_or_osci==0
-        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh2,faxis>12 & faxis<29),1),3)); %Beta
+        temp_topo=squeeze(nanmean(nanmean(all_pow(all_agegroup==nD-1,correspCh,faxis>12 & faxis<29),1),3)); %Beta
     else
-        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh2,faxis>12 & faxis<29),1),3)); %Beta
+        temp_topo=squeeze(nanmean(nanmean(all_osci(all_agegroup==nD-1,correspCh,faxis>12 & faxis<29),1),3)); %Beta
     end
     simpleTopoPlot_ft(temp_topo(correspCh), layout,'on',[],0,1);
     %     simpleTopoPlot_ft(temp_topo, layout,'on',[],0,1); %DP - original, think wrong
@@ -462,11 +464,11 @@ end
 
 figure; format_fig;
 if mix_or_osci==0
-    youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh2,faxis>12 & faxis<29),1),3));
-    oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh2,faxis>12 & faxis<29),1),3));
+    youngtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==0,correspCh,faxis>12 & faxis<29),1),3));
+    oldtopo=squeeze(nanmean(nanmean(all_pow(all_agegroup==1,correspCh,faxis>12 & faxis<29),1),3));
 else
-    youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh2,faxis>12 & faxis<29),1),3));
-    oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh2,faxis>12 & faxis<29),1),3));
+    youngtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==0,correspCh,faxis>12 & faxis<29),1),3));
+    oldtopo=squeeze(nanmean(nanmean(all_osci(all_agegroup==1,correspCh,faxis>12 & faxis<29),1),3));
 end
 difftopo=oldtopo-youngtopo;
 simpleTopoPlot_ft(difftopo(correspCh), layout,'on',[],0,1);
@@ -504,7 +506,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_aperiodic_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==nCh,5),1));
     end
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout. If I change to fractal, error
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout. If I change to fractal, error
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -553,7 +555,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_aperiodic_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==nCh,6),1));
     end
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -593,7 +595,7 @@ for nCh=1:length(myLabels)
     subplot(2,2,nCh)
     hold on;
     for nD=1:2
-        histogram(all_peak_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==match_str(fractal.label,myLabels{nCh}),5),2:1:30);
+        histogram(all_peak_component(all_aperiodic_component(:,2)==agegroups{nD} & all_aperiodic_component(:,4)==match_str(newlabels,myLabels{nCh}),5),2:1:30);
     end
     xlabel('Freq (Hz)')
     ylabel('Count peaks')
@@ -624,7 +626,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_slowpeak_component(all_slowpeak_component(:,2)==agegroups{nD} & all_slowpeak_component(:,4)==nCh,5),1)); %Slow
     end
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -656,7 +658,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_slowpeak_component(all_slowpeak_component(:,2)==agegroups{nD} & all_slowpeak_component(:,4)==nCh,6),1)); %Slow
     end
     subplot(1,2,nD); format_fig;
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -716,7 +718,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_deltapeak_component(all_deltapeak_component(:,2)==agegroups{nD} & all_deltapeak_component(:,4)==nCh,5),1)); %Delta
     end
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -748,7 +750,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_deltapeak_component(all_deltapeak_component(:,2)==agegroups{nD} & all_deltapeak_component(:,4)==nCh,6),1)); %Delta
     end
     subplot(1,2,nD); format_fig;
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -808,7 +810,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_thetapeak_component(all_thetapeak_component(:,2)==agegroups{nD} & all_thetapeak_component(:,4)==nCh,5),1)); %Theta
     end
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -840,7 +842,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_thetapeak_component(all_thetapeak_component(:,2)==agegroups{nD} & all_thetapeak_component(:,4)==nCh,6),1)); %Theta
     end
     subplot(1,2,nD); format_fig;
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -901,7 +903,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_alphapeak_component(all_alphapeak_component(:,2)==agegroups{nD} & all_alphapeak_component(:,4)==nCh,5),1)); %Alpha
     end
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -933,7 +935,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_alphapeak_component(all_alphapeak_component(:,2)==agegroups{nD} & all_alphapeak_component(:,4)==nCh,6),1)); %Alpha
     end
     subplot(1,2,nD); format_fig;
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -995,7 +997,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_betapeak_component(all_betapeak_component(:,2)==agegroups{nD} & all_betapeak_component(:,4)==nCh,5),1)); %Beta
     end
     subplot(1,2,nD); format_fig; %On nD==2 this line deletes prev graph & starts new figure
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -1027,7 +1029,7 @@ for nD=1:2
         temp_topo(nCh)=squeeze(nanmean(all_betapeak_component(all_betapeak_component(:,2)==agegroups{nD} & all_betapeak_component(:,4)==nCh,6),1)); %Beta
     end
     subplot(1,2,nD); format_fig;
-    %     simpleTopoPlot_ft(temp_topo(correspCh2),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
+    %     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - this was the original, but seems to plot incorrect layout
     simpleTopoPlot_ft(temp_topo(correspCh),layout,'on',[],0,1); %DP - looks better but double check
     colormap(cmap);
     %     if nD==1
@@ -1156,7 +1158,7 @@ end
 
 % Then take the mean power at the electrodes of interest for each participant
 for nP=1:size(all_osci,1)
-    roi_theta_osci(nP)=nanmean(theta_osci(nP,match_str(newlabels,'Fz') | match_str(newlabels,'F1') | match_str(newlabels,'F2')),2);
+    roi_theta_osci(nP)=nanmean(theta_osci(nP,match_str(newlabels,{'Fz','F1','F2'})),2);
     roi_alpha_osci(nP)=nanmean(alpha_osci(nP,match_str(newlabels,'Pz')),2);
 end
 
@@ -1180,12 +1182,14 @@ end
     % Probably need four topoplots for all elecs(alpha/theta vs RT/acc) - check the TF scripts
 figure; zvalim=1.1;
 temp_topo=[]; temp_pV=[];
-for nCh=1:length(layout.label)-2
+for nCh=1:length(newlabels)
     [pV,rho]=corr(squeeze(theta_osci(:,nCh)), ...
         meanAcc','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
@@ -1195,12 +1199,14 @@ colorbar; caxis([-1 1]*zvalim)
 
 figure;
 temp_topo=[]; temp_pV=[];
-for nCh=1:length(layout.label)-2
+for nCh=1:length(newlabels)
     [pV,rho]=corr(squeeze(theta_osci(:,nCh)), ...
         meanRT','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
@@ -1210,12 +1216,14 @@ colorbar; caxis([-1 1]*zvalim)
 
 figure;
 temp_topo=[]; temp_pV=[];
-for nCh=1:length(layout.label)-2
+for nCh=1:length(newlabels)
     [pV,rho]=corr(squeeze(alpha_osci(:,nCh)), ...
         meanAcc','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
@@ -1225,12 +1233,14 @@ colorbar; caxis([-1 1]*zvalim)
 
 figure;
 temp_topo=[]; temp_pV=[];
-for nCh=1:length(layout.label)-2
+for nCh=1:length(newlabels)
     [pV,rho]=corr(squeeze(alpha_osci(:,nCh)), ...
         meanRT','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
@@ -1247,12 +1257,14 @@ colorbar; caxis([-1 1]*zvalim)
 
 figure; zvalim=2.5;
 temp_topo=[]; temp_pV=[];
-for nCh=1:length(layout.label)-2
+for nCh=1:length(newlabels)
     [~,P,~,stats]=ttest2(squeeze(theta_osci(all_agegroup==0,nCh)), ...
         squeeze(theta_osci(all_agegroup==1,nCh)));
     temp_topo(nCh)=stats.tstat;
     temp_pV(nCh)=P;
 end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
@@ -1263,12 +1275,14 @@ caxis([-1 1]*zvalim);
 
 figure; zvalim=2.5;
 temp_topo=[]; temp_pV=[];
-for nCh=1:length(layout.label)-2
+for nCh=1:length(newlabels)
     [~,P,~,stats]=ttest2(squeeze(alpha_osci(all_agegroup==0,nCh)), ...
         squeeze(alpha_osci(all_agegroup==1,nCh)));
     temp_topo(nCh)=stats.tstat;
     temp_pV(nCh)=P;
 end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
