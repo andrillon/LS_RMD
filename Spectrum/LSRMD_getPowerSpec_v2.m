@@ -32,7 +32,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-redo=1; complete=0; mix_or_osci=1; %0 = mixed, 1 = oscillatory
+redo=0; complete=0; mix_or_osci=1; %0 = mixed, 1 = oscillatory
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -1183,7 +1183,7 @@ end
 figure; zvalim=1.1;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [pV,rho]=corr(squeeze(theta_osci(:,nCh)), ...
+    [rho,pV]=corr(squeeze(theta_osci(:,nCh)), ...
         meanAcc','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
@@ -1200,7 +1200,7 @@ colorbar; caxis([-1 1]*zvalim)
 figure;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [pV,rho]=corr(squeeze(theta_osci(:,nCh)), ...
+    [rho,pV]=corr(squeeze(theta_osci(:,nCh)), ...
         meanRT','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
@@ -1212,12 +1212,12 @@ temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 title(['Spearmans Rho - Theta Power * RT'])
 colormap(parula);
-colorbar; caxis([-1 1]*zvalim)
+colorbar; caxis([-1 1]*max(abs(temp_topo)))
 
 figure;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [pV,rho]=corr(squeeze(alpha_osci(:,nCh)), ...
+    [rho, pV]=corr(squeeze(alpha_osci(:,nCh)), ...
         meanAcc','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
@@ -1234,7 +1234,7 @@ colorbar; caxis([-1 1]*zvalim)
 figure;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [pV,rho]=corr(squeeze(alpha_osci(:,nCh)), ...
+    [rho,pV]=corr(squeeze(alpha_osci(:,nCh)), ...
         meanRT','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
@@ -1246,11 +1246,11 @@ temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 title(['Spearmans Rho - Alpha Power * RT'])
 colormap(parula);
-colorbar; caxis([-1 1]*zvalim)
+colorbar; caxis([-1 1])
     
     % Because alpha is Pz only don't need a separate roi correlation - just theta
-[pV,rho]=corr(squeeze(roi_theta_osci'), meanRT','type','spearman','rows','pairwise');
-[pV,rho]=corr(squeeze(roi_theta_osci'), meanAcc','type','spearman','rows','pairwise');
+[rho,pV]=corr(squeeze(roi_theta_osci'), meanRT','type','spearman','rows','pairwise');
+[rho,pV]=corr(squeeze(roi_theta_osci'), meanAcc','type','spearman','rows','pairwise');
     
 % Group differences
     % So I want a power x group t test at each electrode
