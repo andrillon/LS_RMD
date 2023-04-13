@@ -1153,6 +1153,8 @@ for nE=1:length(newlabels)
     for nP=1:size(all_osci,1)
         theta_osci(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>4 & faxis<7),3));
         alpha_osci(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>8 & faxis<11),3));
+        delta_osci(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>1 & faxis<3),3));
+        slow_osci(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>1 & faxis<7),3));
     end
 end
 
@@ -1180,22 +1182,22 @@ end
 
 % Correlate to behaviour
     % Probably need four topoplots for all elecs(alpha/theta vs RT/acc) - check the TF scripts
-figure; zvalim=1.1;
-temp_topo=[]; temp_pV=[];
-for nCh=1:length(newlabels)
-    [rho,pV]=corr(squeeze(theta_osci(:,nCh)), ...
-        meanAcc','type','spearman','rows','pairwise');
-    temp_topo(nCh)=rho;
-    temp_pV(nCh)=pV;
-end
-temp_topo=temp_topo(correspCh);
-temp_pV=temp_pV(correspCh);
-temp_topo(temp_pV>0.05)=0;
-temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
-simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-title(['Spearmans Rho - Theta Power * Accuracy'])
-colormap(parula);
-colorbar; caxis([-1 1]*zvalim)
+% figure; zvalim=1.1;
+% temp_topo=[]; temp_pV=[];
+% for nCh=1:length(newlabels)
+%     [rho,pV]=corr(squeeze(theta_osci(:,nCh)), ...
+%         meanAcc','type','spearman','rows','pairwise');
+%     temp_topo(nCh)=rho;
+%     temp_pV(nCh)=pV;
+% end
+% temp_topo=temp_topo(correspCh);
+% temp_pV=temp_pV(correspCh);
+% temp_topo(temp_pV>0.05)=0;
+% temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+% simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+% title(['Spearmans Rho - Theta Power * Accuracy'])
+% colormap(parula);
+% colorbar; caxis([-1 1]*zvalim)
 
 figure;
 temp_topo=[]; temp_pV=[];
@@ -1214,22 +1216,22 @@ title(['Spearmans Rho - Theta Power * RT'])
 colormap(parula);
 colorbar; caxis([-1 1]*max(abs(temp_topo)))
 
-figure;
-temp_topo=[]; temp_pV=[];
-for nCh=1:length(newlabels)
-    [rho, pV]=corr(squeeze(alpha_osci(:,nCh)), ...
-        meanAcc','type','spearman','rows','pairwise');
-    temp_topo(nCh)=rho;
-    temp_pV(nCh)=pV;
-end
-temp_topo=temp_topo(correspCh);
-temp_pV=temp_pV(correspCh);
-temp_topo(temp_pV>0.05)=0;
-temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
-simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-title(['Spearmans Rho - Alpha Power * Accuracy'])
-colormap(parula);
-colorbar; caxis([-1 1]*zvalim)
+% figure;
+% temp_topo=[]; temp_pV=[];
+% for nCh=1:length(newlabels)
+%     [rho, pV]=corr(squeeze(alpha_osci(:,nCh)), ...
+%         meanAcc','type','spearman','rows','pairwise');
+%     temp_topo(nCh)=rho;
+%     temp_pV(nCh)=pV;
+% end
+% temp_topo=temp_topo(correspCh);
+% temp_pV=temp_pV(correspCh);
+% temp_topo(temp_pV>0.05)=0;
+% temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+% simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+% title(['Spearmans Rho - Alpha Power * Accuracy'])
+% colormap(parula);
+% colorbar; caxis([-1 1]*zvalim)
 
 figure;
 temp_topo=[]; temp_pV=[];
@@ -1245,6 +1247,40 @@ temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 title(['Spearmans Rho - Alpha Power * RT'])
+colormap(parula);
+colorbar; caxis([-1 1])
+
+figure;
+temp_topo=[]; temp_pV=[];
+for nCh=1:length(newlabels)
+    [rho,pV]=corr(squeeze(delta_osci(:,nCh)), ...
+        meanRT','type','spearman','rows','pairwise');
+    temp_topo(nCh)=rho;
+    temp_pV(nCh)=pV;
+end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
+temp_topo(temp_pV>0.05)=0;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title(['Spearmans Rho - Delta Power * RT'])
+colormap(parula);
+colorbar; caxis([-1 1])
+
+figure;
+temp_topo=[]; temp_pV=[];
+for nCh=1:length(newlabels)
+    [rho,pV]=corr(squeeze(slow_osci(:,nCh)), ...
+        meanRT','type','spearman','rows','pairwise');
+    temp_topo(nCh)=rho;
+    temp_pV(nCh)=pV;
+end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
+temp_topo(temp_pV>0.05)=0;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title(['Spearmans Rho - Slow Power * RT'])
 colormap(parula);
 colorbar; caxis([-1 1])
     
@@ -1287,6 +1323,42 @@ temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 title(['t test - Alpha Power * Group'])
+colormap(parula);
+colorbar; 
+caxis([-1 1]*zvalim);
+
+figure; zvalim=2.5;
+temp_topo=[]; temp_pV=[];
+for nCh=1:length(newlabels)
+    [~,P,~,stats]=ttest2(squeeze(delta_osci(all_agegroup==0,nCh)), ...
+        squeeze(delta_osci(all_agegroup==1,nCh)));
+    temp_topo(nCh)=stats.tstat;
+    temp_pV(nCh)=P;
+end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
+temp_topo(temp_pV>0.05)=0;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title(['t test - Delta Power * Group'])
+colormap(parula);
+colorbar; 
+caxis([-1 1]*zvalim);
+
+figure; zvalim=2.5;
+temp_topo=[]; temp_pV=[];
+for nCh=1:length(newlabels)
+    [~,P,~,stats]=ttest2(squeeze(slow_osci(all_agegroup==0,nCh)), ...
+        squeeze(slow_osci(all_agegroup==1,nCh)));
+    temp_topo(nCh)=stats.tstat;
+    temp_pV(nCh)=P;
+end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
+temp_topo(temp_pV>0.05)=0;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title(['t test - Slow Power * Group'])
 colormap(parula);
 colorbar; 
 caxis([-1 1]*zvalim);
