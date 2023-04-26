@@ -32,7 +32,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-redo=0; complete=0; mix_or_osci=1; %0 = mixed, 1 = oscillatory
+redo=0; complete=0; mix_or_osci=0; %0 = mixed, 1 = oscillatory
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
