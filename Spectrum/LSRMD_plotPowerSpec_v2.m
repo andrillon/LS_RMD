@@ -93,7 +93,7 @@ faxis=fractal.freq;
 % subplot(1,4,1);   
 % jbfill([24.5 25.5],[-.7 -.7],[2 2],[50,205,50]/256,[50,205,50]/256,1,0.2);
 
-channels_to_plot={'Cz'};
+channels_to_plot={'Oz'};
 % channels_to_plot={'Fz','Cz','Pz','Oz'};
 figure; set(gcf,'Position',[ 2104         115         788         574]);
 format_fig;
@@ -142,8 +142,16 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
 hold on;
-[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_osci(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.3,1,0,1,1);
-[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_osci(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.3,1,0,1,1);
+temp_tplot=squeeze(nanmean(all_osci(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2));
+temp_faxis=faxis;
+temp_faxis(sum(isnan(temp_tplot),1)>0)=[];
+temp_tplot(:,sum(isnan(temp_tplot),1)>0)=[];
+[~,hp(1)]=simpleTplot(temp_faxis,temp_tplot,0,cmap(nCh+1,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+temp_tplot=squeeze(nanmean(all_osci(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2));
+temp_faxis=faxis;
+temp_faxis(sum(isnan(temp_tplot),1)>0)=[];
+temp_tplot(:,sum(isnan(temp_tplot),1)>0)=[];
+[~,hp(2)]=simpleTplot(temp_faxis,temp_tplot,0,cmap2(nCh+1,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
 end
 xlim([2 30])
 % ylim([-.7 2])
@@ -171,8 +179,16 @@ cmap=cbrewer('seq','Blues',5);
 cmap2=cbrewer('seq','Oranges',5);
 for nCh=1:length(channels_to_plot)
 hold on;
-[~,hp(1)]=simpleTplot(faxis,squeeze(nanmean(all_frac(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap(nCh+1,:),[0],'-',0.3,1,0,1,1);
-[~,hp(2)]=simpleTplot(faxis,squeeze(nanmean(all_frac(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2)),0,cmap2(nCh+1,:),[0],'-',0.3,1,0,1,1);
+temp_tplot=squeeze(nanmean(all_frac(all_group==4,match_str(newlabels,channels_to_plot{nCh}),:),2));
+temp_faxis=faxis;
+temp_faxis(sum(isnan(temp_tplot),1)>0)=[];
+temp_tplot(:,sum(isnan(temp_tplot),1)>0)=[];
+[~,hp(1)]=simpleTplot(temp_faxis,temp_tplot,0,cmap(nCh+1,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
+temp_tplot=squeeze(nanmean(all_frac(all_group==5,match_str(newlabels,channels_to_plot{nCh}),:),2));
+temp_faxis=faxis;
+temp_faxis(sum(isnan(temp_tplot),1)>0)=[];
+temp_tplot(:,sum(isnan(temp_tplot),1)>0)=[];
+[~,hp(2)]=simpleTplot(temp_faxis,temp_tplot,0,cmap2(nCh+1,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
 end
 xlim([2 30])
 % ylim([-.7 2])
