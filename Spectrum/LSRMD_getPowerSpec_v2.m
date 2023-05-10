@@ -32,7 +32,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-redo=0; complete=0; mix_or_osci=1; %0 = mixed, 1 = oscillatory
+redo=0; complete=0; mix_or_osci=0; %0 = mixed, 1 = oscillatory
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -1159,17 +1159,23 @@ end
 % each electrode
 for nE=1:length(newlabels)
     for nP=1:size(all_osci,1)
-        theta_osci(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>4 & faxis<7),3));
-        alpha_osci(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>8 & faxis<11),3));
-        delta_osci(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>1 & faxis<3),3));
-        slow_osci(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>1 & faxis<7),3));
+%         theta_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>4 & faxis<7),3));
+%         alpha_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>8 & faxis<11),3));
+%         delta_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>1 & faxis<3),3));
+%         slow_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>1 & faxis<7),3));
+%         beta_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>12 & faxis<29),3));
+        theta_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>4 & faxis<7),3));
+        alpha_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>8 & faxis<11),3));
+        delta_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>1 & faxis<3),3));
+        slow_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>1 & faxis<7),3));
+        beta_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>12 & faxis<29),3));
     end
 end
 
 % Then take the mean power at the electrodes of interest for each participant
 for nP=1:size(all_osci,1)
-    roi_theta_osci(nP)=nanmean(theta_osci(nP,match_str(newlabels,{'Fz','F1','F2'})),2);
-    roi_alpha_osci(nP)=nanmean(alpha_osci(nP,match_str(newlabels,'Pz')),2);
+    roi_theta_temp(nP)=nanmean(theta_temp(nP,match_str(newlabels,{'Fz','F1','F2'})),2);
+    roi_alpha_temp(nP)=nanmean(alpha_temp(nP,match_str(newlabels,'Pz')),2);
 end
 
 % Then do stats
@@ -1210,7 +1216,7 @@ end
 figure;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [rho,pV]=corr(squeeze(theta_osci(:,nCh)), ...
+    [rho,pV]=corr(squeeze(theta_temp(:,nCh)), ...
         meanRT','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
@@ -1220,7 +1226,7 @@ temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-title(['Spearmans Rho - Theta Power * RT'])
+title(['Spearmans Rho - Theta Osci * RT'])
 colormap(parula);
 colorbar; caxis([-1 1]*max(abs(temp_topo)))
 
@@ -1244,7 +1250,7 @@ colorbar; caxis([-1 1]*max(abs(temp_topo)))
 figure;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [rho,pV]=corr(squeeze(alpha_osci(:,nCh)), ...
+    [rho,pV]=corr(squeeze(alpha_temp(:,nCh)), ...
         meanRT','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
@@ -1254,14 +1260,14 @@ temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-title(['Spearmans Rho - Alpha Power * RT'])
+title(['Spearmans Rho - Alpha Osci * RT'])
 colormap(parula);
 colorbar; caxis([-1 1])
 
 figure;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [rho,pV]=corr(squeeze(delta_osci(:,nCh)), ...
+    [rho,pV]=corr(squeeze(beta_temp(:,nCh)), ...
         meanRT','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
@@ -1271,14 +1277,14 @@ temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-title(['Spearmans Rho - Delta Power * RT'])
+title(['Spearmans Rho - Beta Power * RT'])
 colormap(parula);
 colorbar; caxis([-1 1])
 
 figure;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [rho,pV]=corr(squeeze(slow_osci(:,nCh)), ...
+    [rho,pV]=corr(squeeze(delta_temp(:,nCh)), ...
         meanRT','type','spearman','rows','pairwise');
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
@@ -1288,13 +1294,30 @@ temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-title(['Spearmans Rho - Slow Power * RT'])
+title(['Spearmans Rho - Delta Osci * RT'])
+colormap(parula);
+colorbar; caxis([-1 1])
+
+figure;
+temp_topo=[]; temp_pV=[];
+for nCh=1:length(newlabels)
+    [rho,pV]=corr(squeeze(slow_temp(:,nCh)), ...
+        meanRT','type','spearman','rows','pairwise');
+    temp_topo(nCh)=rho;
+    temp_pV(nCh)=pV;
+end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
+temp_topo(temp_pV>0.05)=0;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title(['Spearmans Rho - Slow Osci * RT'])
 colormap(parula);
 colorbar; caxis([-1 1])
     
     % Because alpha is Pz only don't need a separate roi correlation - just theta
-[rho,pV]=corr(squeeze(roi_theta_osci'), meanRT','type','spearman','rows','pairwise');
-[rho,pV]=corr(squeeze(roi_theta_osci'), meanAcc','type','spearman','rows','pairwise');
+[rho,pV]=corr(squeeze(roi_theta_temp'), meanRT','type','spearman','rows','pairwise');
+[rho,pV]=corr(squeeze(roi_theta_temp'), meanAcc','type','spearman','rows','pairwise');
     
 % Group differences
     % So I want a power x group t test at each electrode
@@ -1302,8 +1325,8 @@ colorbar; caxis([-1 1])
 figure; zvalim=2.5;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [~,P,~,stats]=ttest2(squeeze(theta_osci(all_agegroup==0,nCh)), ...
-        squeeze(theta_osci(all_agegroup==1,nCh)));
+    [~,P,~,stats]=ttest2(squeeze(theta_temp(all_agegroup==0,nCh)), ...
+        squeeze(theta_temp(all_agegroup==1,nCh)));
     temp_topo(nCh)=stats.tstat;
     temp_pV(nCh)=P;
 end
@@ -1312,7 +1335,7 @@ temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-title(['t test - Theta Power * Group'])
+title(['t test - Theta Osci * Group'])
 colormap(parula);
 colorbar; 
 caxis([-1 1]*zvalim);
@@ -1320,8 +1343,8 @@ caxis([-1 1]*zvalim);
 figure; zvalim=2.5;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [~,P,~,stats]=ttest2(squeeze(alpha_osci(all_agegroup==0,nCh)), ...
-        squeeze(alpha_osci(all_agegroup==1,nCh)));
+    [~,P,~,stats]=ttest2(squeeze(alpha_temp(all_agegroup==0,nCh)), ...
+        squeeze(alpha_temp(all_agegroup==1,nCh)));
     temp_topo(nCh)=stats.tstat;
     temp_pV(nCh)=P;
 end
@@ -1330,7 +1353,7 @@ temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-title(['t test - Alpha Power * Group'])
+title(['t test - Alpha Osci * Group'])
 colormap(parula);
 colorbar; 
 caxis([-1 1]*zvalim);
@@ -1338,8 +1361,8 @@ caxis([-1 1]*zvalim);
 figure; zvalim=2.5;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [~,P,~,stats]=ttest2(squeeze(delta_osci(all_agegroup==0,nCh)), ...
-        squeeze(delta_osci(all_agegroup==1,nCh)));
+    [~,P,~,stats]=ttest2(squeeze(beta_temp(all_agegroup==0,nCh)), ...
+        squeeze(beta_temp(all_agegroup==1,nCh)));
     temp_topo(nCh)=stats.tstat;
     temp_pV(nCh)=P;
 end
@@ -1348,7 +1371,7 @@ temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-title(['t test - Delta Power * Group'])
+title(['t test - Beta Power * Group'])
 colormap(parula);
 colorbar; 
 caxis([-1 1]*zvalim);
@@ -1356,8 +1379,8 @@ caxis([-1 1]*zvalim);
 figure; zvalim=2.5;
 temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
-    [~,P,~,stats]=ttest2(squeeze(slow_osci(all_agegroup==0,nCh)), ...
-        squeeze(slow_osci(all_agegroup==1,nCh)));
+    [~,P,~,stats]=ttest2(squeeze(delta_temp(all_agegroup==0,nCh)), ...
+        squeeze(delta_temp(all_agegroup==1,nCh)));
     temp_topo(nCh)=stats.tstat;
     temp_pV(nCh)=P;
 end
@@ -1366,14 +1389,32 @@ temp_pV=temp_pV(correspCh);
 temp_topo(temp_pV>0.05)=0;
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-title(['t test - Slow Power * Group'])
+title(['t test - Delta Osci * Group'])
+colormap(parula);
+colorbar; 
+caxis([-1 1]*zvalim);
+
+figure; zvalim=2.5;
+temp_topo=[]; temp_pV=[];
+for nCh=1:length(newlabels)
+    [~,P,~,stats]=ttest2(squeeze(slow_temp(all_agegroup==0,nCh)), ...
+        squeeze(slow_temp(all_agegroup==1,nCh)));
+    temp_topo(nCh)=stats.tstat;
+    temp_pV(nCh)=P;
+end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
+temp_topo(temp_pV>0.05)=0;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title(['t test - Slow Osci * Group'])
 colormap(parula);
 colorbar; 
 caxis([-1 1]*zvalim);
 
 % And then check theta ROI
-[~,P,~,stats]=ttest2(squeeze(roi_theta_osci(:,all_agegroup==0)), ...
-        squeeze(roi_theta_osci(:,all_agegroup==1)));
+[~,P,~,stats]=ttest2(squeeze(roi_theta_temp(:,all_agegroup==0)), ...
+        squeeze(roi_theta_temp(:,all_agegroup==1)));
     
 %%
 % % alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
