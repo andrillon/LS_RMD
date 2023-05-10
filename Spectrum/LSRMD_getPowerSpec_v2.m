@@ -172,7 +172,7 @@ if redo==1
         
         
     end
-    save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'all_pow','all_group','all_agegroup','all_peak_component','all_aperiodic_component','all_frac','fractal','newlabels','all_osci');
+    save([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat'],'all_pow','all_group','all_agegroup','all_peak_component','all_aperiodic_component','all_frac','fractal','newlabels','all_osci','all_detectedpeaks');
     
 else
     load([preproc_path filesep 'all_FFT_perBlock_byElec_ICAcleaned_v2.mat']);
