@@ -34,7 +34,7 @@ files=dir([preproc_path filesep 'ICAcleaned_etrial_ft_*.mat']);
 %%
 res_mat=[];
 redo=0; complete=0;
-datatype=0; %0 = evoked, stim locked; 1 = evoked, resp locked; 2 = induced, resp locked; 3 = induced, stim locked
+datatype=1; %0 = evoked, stim locked; 1 = evoked, resp locked; 2 = induced, resp locked; 3 = induced, stim locked
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -941,3 +941,70 @@ title('Older 90%');
 colormap(cmap);
 colorbar; caxis([-1 1]*zvalim)
 
+%% Time / frequency window topoplots
+
+% Theta -200ms to 100ms around response
+cmap=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
+cmap=flipud(cmap); maxmin=[];
+temp_topo=[];
+
+for nG=1:2
+    for nCh=1:length(layout.label)-2
+        temp_topo(nCh,:)=squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==nG-1,match_str(newlabels,layout.label(nCh)),faxis>4 & faxis<7,TFtimes>-.20 & TFtimes <.10),3),4));
+        maxmin(nG,nCh,1)=min((temp_topo(nCh)));
+        maxmin(nG,nCh,2)=max((temp_topo(nCh)));
+    end
+    temp_topo=[];
+end
+
+figure;
+subplot(1,2,1); temp_topo=[];
+for nCh=1:length(layout.label)-2
+    temp_topo(nCh,:)=squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>4 & faxis<7,TFtimes>-.20 & TFtimes <.10),3),4));
+end
+temp_topo(match_str(layout.label,{'TP7','TP8'}),:)=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1); title('Younger 90%');
+caxis([0-max(max(max(abs(maxmin)))) max(max(max(abs(maxmin))))])
+colorbar;
+ 
+subplot(1,2,2);  temp_topo=[];
+for nCh=1:length(layout.label)-2
+    temp_topo(nCh,:)=squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>4 & faxis<7,TFtimes>-.20 & TFtimes <.10),3),4));
+end
+temp_topo(match_str(layout.label,{'TP7','TP8'}),:)=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1); title('Older 90%');
+caxis([0-max(max(max(abs(maxmin)))) max(max(max(abs(maxmin))))])
+colorbar;
+
+% Beta -200ms to 100ms around response
+cmap=cbrewer('div','RdBu',64); % select a sequential colorscale from yellow to red (64)
+cmap=flipud(cmap); maxmin=[];
+temp_topo=[];
+
+for nG=1:2
+    for nCh=1:length(layout.label)-2
+        temp_topo(nCh,:)=squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==nG-1,match_str(newlabels,layout.label(nCh)),faxis>12 & faxis<29,TFtimes>-.20 & TFtimes <.10),3),4));
+        maxmin(nG,nCh,1)=min((temp_topo(nCh)));
+        maxmin(nG,nCh,2)=max((temp_topo(nCh)));
+    end
+    temp_topo=[];
+end
+
+figure;
+subplot(1,2,1); temp_topo=[];
+for nCh=1:length(layout.label)-2
+    temp_topo(nCh,:)=squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==0,match_str(newlabels,layout.label(nCh)),faxis>12 & faxis<29,TFtimes>-.20 & TFtimes <.10),3),4));
+end
+temp_topo(match_str(layout.label,{'TP7','TP8'}),:)=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1); title('Younger 90%');
+caxis([0-max(max(max(abs(maxmin)))) max(max(max(abs(maxmin))))])
+colorbar;
+ 
+subplot(1,2,2);  temp_topo=[];
+for nCh=1:length(layout.label)-2
+    temp_topo(nCh,:)=squeeze(nanmean(nanmean(all_TFRhann(all_agegroup==1,match_str(newlabels,layout.label(nCh)),faxis>12 & faxis<29,TFtimes>-.20 & TFtimes <.10),3),4));
+end
+temp_topo(match_str(layout.label,{'TP7','TP8'}),:)=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1); title('Older 90%');
+caxis([0-max(max(max(abs(maxmin)))) max(max(max(abs(maxmin))))])
+colorbar;
