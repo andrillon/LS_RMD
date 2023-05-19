@@ -1117,8 +1117,8 @@ alphachans={'Oz','O1','O2'};
 
 % Mixed
 for nCh=1:length(alphachans)
-    alphapow_old(:,nCh)=squeeze(nanmean(all_pow(all_agegroup==0,match_str(newlabels,alphachans{nCh}),faxis>8 & faxis<11),3));
-    alphapow_young(:,nCh)=squeeze(nanmean(all_pow(all_agegroup==1,match_str(newlabels,alphachans{nCh}),faxis>8 & faxis<11),3));
+    alphapow_old(:,nCh)=squeeze(nanmean(all_pow(all_agegroup==1,match_str(newlabels,alphachans{nCh}),faxis>8 & faxis<11),3));
+    alphapow_young(:,nCh)=squeeze(nanmean(all_pow(all_agegroup==0,match_str(newlabels,alphachans{nCh}),faxis>8 & faxis<11),3));
 end
 
 for pps=1:length(alphapow_old)
@@ -1133,8 +1133,8 @@ end
 
 % Osci
 % for nCh=1:length(alphachans)
-%     alphapow_old(:,nCh)=squeeze(nanmean(all_osci(all_agegroup==0,match_str(newlabels,alphachans{nCh}),faxis>8 & faxis<11),3));
-%     alphapow_young(:,nCh)=squeeze(nanmean(all_osci(all_agegroup==1,match_str(newlabels,alphachans{nCh}),faxis>8 & faxis<11),3));
+%     alphapow_old(:,nCh)=squeeze(nanmean(all_osci(all_agegroup==1,match_str(newlabels,alphachans{nCh}),faxis>8 & faxis<11),3));
+%     alphapow_young(:,nCh)=squeeze(nanmean(all_osci(all_agegroup==0,match_str(newlabels,alphachans{nCh}),faxis>8 & faxis<11),3));
 % end
 % 
 % for pps=1:length(alphapow_old)
@@ -1190,9 +1190,40 @@ for nF=1:length(files)
     SubID=SubID(seps(1)+3:end);
     nFc=nFc+1;
     behav_table=readtable([folder_name filesep 'behav_' file_name(findstr(file_name,'ft_')+3:end-4) '.csv']);
-    meanRT(nFc)=nanmean(behav_table.RT);
-    meanAcc(nFc)=(nnz(behav_table.RT>0))/(length(behav_table.RT));
+    meanRT(nFc,1)=nanmean(behav_table.RT);
+    meanAcc(nFc,1)=(nnz(behav_table.RT>0))/(length(behav_table.RT));
+    for side=1:2
+        meanRT_side(nFc,side)=nanmean(behav_table.RT(behav_table.Cond==side));
+        meanAcc_side(nFc,side)=(nnz(behav_table.RT(behav_table.Cond==side)>0))/(length(behav_table.RT(behav_table.Cond==side)));
+    end
 end
+
+% Group ANOVA behaviour - RT
+tab = table(all_agegroup',meanRT_side(:,1),meanRT_side(:,2),'VariableNames',{'GroupIDs','Left','Right'});
+% idx = tab.GroupIDs ~= 3; tab = tab(idx,:); % eliminate a group - optional
+tab.GroupIDs = nominal(tab.GroupIDs);
+mspec = ['Left-Right~GroupIDs'];
+within = table([1:2]','VariableNames',{'Sides'});
+rm = fitrm(tab,mspec,'WithinDesign',within);
+ranovatbl = ranova(rm) % for the within subjects effect
+anovatbl = anova(rm) % for the between subjects effect
+    
+oldRTmean=nanmean(meanRT(all_agegroup==1,:)); youngRTmean=nanmean(meanRT(all_agegroup==0,:));
+oldRTsd=std(meanRT(all_agegroup==1,:)); youngRTsd=std(meanRT(all_agegroup==0,:));
+
+% Group ANOVA behaviour - Hit Rate
+tab = table(all_agegroup',meanAcc_side(:,1),meanAcc_side(:,2),'VariableNames',{'GroupIDs','Left','Right'});
+% idx = tab.GroupIDs ~= 3; tab = tab(idx,:); % eliminate a group - optional
+tab.GroupIDs = nominal(tab.GroupIDs);
+mspec = ['Left-Right~GroupIDs'];
+within = table([1:2]','VariableNames',{'Sides'});
+rm = fitrm(tab,mspec,'WithinDesign',within);
+ranovatbl = ranova(rm) % for the within subjects effect
+anovatbl = anova(rm) % for the between subjects effect
+    
+oldAccmean=nanmean(meanAcc(all_agegroup==1,:)); youngAccmean=nanmean(meanAcc(all_agegroup==0,:));
+oldAccsd=std(meanAcc(all_agegroup==1,:)); youngAccsd=std(meanAcc(all_agegroup==0,:));
+
 
 % Correlate to behaviour
     % Probably need four topoplots for all elecs(alpha/theta vs RT/acc) - check the TF scripts
