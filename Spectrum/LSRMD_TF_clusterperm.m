@@ -87,6 +87,11 @@ old_TFRhann=old_TFRhann(:,:,:,TFtimes>=-.70 & TFtimes<=0.50);
 TFwindow=TFtimes(TFtimes>=-.70 & TFtimes<=0.50);
 % faxis=TFRhann.freq;
 
+%% Trim to electrode of interest & mean
+channels_to_plot={'Fz'};
+young_TFRhann=squeeze(young_TFRhann(:,match_str(newlabels,channels_to_plot{1}),:,:));
+old_TFRhann=squeeze(old_TFRhann(:,match_str(newlabels,channels_to_plot{1}),:,:));
+
 %% Cluster Permutation
 clusteralpha=0.05;
 montecarloalpha=0.05;
@@ -94,7 +99,7 @@ nperm=1000; nFreq=length(faxis); nTime=length(TFwindow);
 tailFlag=0;
 channels_to_plot={'Fz'};
 
-dat=cat(1,squeeze(young_TFRhann(:,match_str(newlabels,channels_to_plot{1}),:,:)),squeeze(old_TFRhann(:,match_str(newlabels,channels_to_plot{1}),:,:))); %tf_groupA: subj * freq * time
+dat=cat(1,young_TFRhann,old_TFRhann); %tf_groupA: subj * freq * time
 design=[ones(size(young_TFRhann,1),1) ; 2*ones(size(old_TFRhann,1),1)];
 
 cfg                     = [];
@@ -103,7 +108,8 @@ cfg.dimord              = 'rpt_freq_times';
 cfg.freq                = faxis;
 cfg.time                = TFwindow;
 cfg.channel             = {'eeg'};
-cfg.dim                 = [1 nFreq nTime];
+cfg.dim                 = [nFreq nTime];
+cfg.resampling          = 'permutation';
 
 cfg.numrandomization    = nperm;                   % number of randomizations, can be 'all'
 cfg.correctm            = 'cluster';              % apply multiple-comparison correction, 'no', 'max', cluster', 'bonferoni', 'holms', 'fdr' (default = 'no')
@@ -112,7 +118,7 @@ cfg.clusteralpha        = clusteralpha;                   % critical value for r
 cfg.tail                = tailFlag;                      % -1, 1 or 0 (default = 0)
 cfg.correcttail         = 'no';                % correct p-values or alpha-values when doing a two-sided test, 'alpha','prob' or 'no' (default = 'no')
 cfg.ivar                = 1;                      % number or list with indices, independent variable(s)
-cfg.uvar                = 2;                      % number or list with indices, unit variable(s)
+cfg.uvar                = [];                      % number or list with indices, unit variable(s)
 cfg.wvar                = [];                     % number or list with indices, within-cell variable(s)
 cfg.cvar                = [];                     % number or list with indices, control variable(s)
 cfg.feedback            = 'textbar';              % 'gui', 'text', 'textbar' or 'no' (default = 'text')
@@ -124,7 +130,7 @@ cfg.clusteralpha        = clusteralpha;                   %
 cfg.clustercritval      = [] ;                    %
 cfg.clustertail         = cfg.tail;               %
 
-cfg.statistic           = 'depsamplesT';
+cfg.statistic           = 'indepsamplesT';
 cfg.avgoverchan         = 'no';
 [stat, cfg]             = ft_statistics_montecarlo(cfg, dat, design);
 
