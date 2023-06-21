@@ -84,16 +84,7 @@ end
 % So I need to avg across the time windows of -200-100ms
 % And over the beta / theta freqs
 
-%% Trim Time Window
-young_TFRhann=young_TFRhann(:,:,:,TFtimes>=-.20 & TFtimes<=0.10);
-old_TFRhann=old_TFRhann(:,:,:,TFtimes>=-.20 & TFtimes<=0.10);
-TFwindow=TFtimes(TFtimes>=-.20 & TFtimes<=0.10);
-
-%% Trim Freq Window
-
-% faxis=TFRhann.freq;
-
-%Cluster Permutation
+%% Cluster Permutation
 clusteralpha=0.05;
 montecarloalpha=0.05;
 nperm=1000;
@@ -111,3 +102,41 @@ cfg_neighb.channel=layout.label;
 neighbours = ft_prepare_neighbours(cfg_neighb);
 
 [SW_clus]=get_clusterperm_lme_lsneurom(SW_est,clusteralpha,montecarloalpha,nperm,neighbours);
+
+%% Uncorrected t/p maps
+
+figure; zvalim=6;
+temp_topo=[]; temp_pV=[];
+for nCh=1:length(newlabels)
+    [~,P,~,stats]=ttest2(squeeze(nanmean(nanmean(old_TFRhann(:,nCh,faxis>4 & faxis<7,TFtimes>=-.20 & TFtimes<=0.10),3),4)), ...
+        squeeze(nanmean(nanmean(young_TFRhann(:,nCh,faxis>4 & faxis<7,TFtimes>=-.20 & TFtimes<=0.10),3),4)));
+    temp_topo(nCh)=stats.tstat;
+    temp_pV(nCh)=P;
+end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
+temp_topo(temp_pV>0.05)=0;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title(['t test - Theta Power (TF) * Group'])
+colormap(parula);
+colorbar; 
+caxis([-1 1]*zvalim);
+
+figure; zvalim=6;
+temp_topo=[]; temp_pV=[];
+for nCh=1:length(newlabels)
+    [~,P,~,stats]=ttest2(squeeze(nanmean(nanmean(old_TFRhann(:,nCh,faxis>12 & faxis<29,TFtimes>=-.20 & TFtimes<=0.10),3),4)), ...
+        squeeze(nanmean(nanmean(young_TFRhann(:,nCh,faxis>12 & faxis<29,TFtimes>=-.20 & TFtimes<=0.10),3),4)));
+    temp_topo(nCh)=stats.tstat;
+    temp_pV(nCh)=P;
+end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
+temp_topo(temp_pV>0.05)=0;
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+title(['t test - Beta Power (TF) * Group'])
+colormap(parula);
+colorbar; 
+caxis([-1 1]*zvalim);
