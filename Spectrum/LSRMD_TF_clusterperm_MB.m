@@ -141,7 +141,7 @@ load([preproc_path filesep 'TFR_struct.mat']);
 clusteralpha = 0.05;
 montecarloalpha = 0.05;
 nperm = 1000;
-design = [ones(1,size(young_TFRhann,1)) , 2*ones(1,size(old_TFRhann,1))];
+design = [ones(1,size(old_TFRhann,1)) , 2*ones(1,size(young_TFRhann,1))];
 
 TFR_young = TFR_struct;
 pow_young  = zeros([size(young_TFRhann,1), 1, size(young_TFRhann,2), size(young_TFRhann,3)]);
