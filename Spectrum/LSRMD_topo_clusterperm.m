@@ -115,7 +115,9 @@ for nCh=1:length(newlabels)
 end
 temp_topo=temp_topo(correspCh);
 temp_pV=temp_pV(correspCh);
-temp_topo(temp_pV>0.05)=0;
+[p_fdr, p_masked] = fdr(temp_pV,.05);
+temp_topo(temp_pV>p_fdr)=0; % FDR corrected p
+% temp_topo(temp_pV>0.05)=0; % p>.05
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 title(['t test - Theta Power (TF) * Group'])
@@ -133,7 +135,9 @@ for nCh=1:length(newlabels)
 end
 temp_topo=temp_topo(correspCh);
 temp_pV=temp_pV(correspCh);
-temp_topo(temp_pV>0.05)=0;
+[p_fdr, p_masked] = fdr(temp_pV,.05);
+temp_topo(temp_pV>p_fdr)=0; % FDR corrected p
+% temp_topo(temp_pV>0.05)=0; % p>.05
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
 title(['t test - Beta Power (TF) * Group'])

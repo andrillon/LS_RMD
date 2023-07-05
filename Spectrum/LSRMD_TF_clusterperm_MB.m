@@ -186,5 +186,15 @@ newmask = 1*double(reshape(stat.mask, [length(TFwindow) length(faxis)]))';
 newmask(newmask(:) == 0) = .5;
 alpha(h, newmask); hold on;
 if ~isempty(newmask==1)
-    contour(TFwindow, faxis,newmask,.5,'Color','k','LineWidth',3)
+    contour(TFwindow, faxis,newmask',.5,'Color','k','LineWidth',3)
 end
+
+%% Uncorrected T/p Maps
+%{
+[H,P,CI,STATS] = ttest2(old_TFRhann,young_TFRhann,'dim',1); %stats
+t=squeeze(STATS.tstat);
+t(P>.05)=0;
+
+figure;
+h1=simpleTFplot(t,faxis,TFwindow,0,0); colorbar;
+%}
