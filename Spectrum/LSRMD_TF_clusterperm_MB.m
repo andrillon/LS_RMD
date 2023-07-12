@@ -138,7 +138,7 @@ old_TFRhann=squeeze(old_TFRhann(:,match_str(newlabels,channels_to_plot{1}),:,:))
 % Load the structure that I sent to you
 load([preproc_path filesep 'TFR_struct.mat']);
 
-clusteralpha = 0.05;
+clusteralpha = 0.01;
 montecarloalpha = 0.05;
 nperm = 1000;
 design = [ones(1,size(old_TFRhann,1)) , 2*ones(1,size(young_TFRhann,1))];
@@ -178,15 +178,53 @@ stat = ft_freqstatistics(cfg, TFR_old, TFR_young);
 
 
 %% plotting result
+stat.newmask=zeros(size(stat.mask));
+stat.newmask(stat.negclusterslabelmat~=0)=1;
+stat.newmask(stat.posclusterslabelmat~=0)=1;
 TF_diff=squeeze(mean(TFR_old.powspctrm,1)-mean(TFR_young.powspctrm,1));
 % mytval(~stat.mask)=0;
 h=simpleTFplot(TF_diff,faxis,TFwindow,0,0); %colormap(cmap); %ylim([freqs(1) 8])
 caxis([-1 1]*max(max(abs(TF_diff))));
-newmask = 1*double(reshape(stat.mask, [length(TFwindow) length(faxis)]))';
+newmask = squeeze(stat.newmask);
 newmask(newmask(:) == 0) = .5;
 alpha(h, newmask); hold on;
 if ~isempty(newmask==1)
-    contour(TFwindow, faxis,newmask',.5,'Color','k','LineWidth',3)
+    contour(TFwindow, faxis,newmask,.5,'Color','k','LineWidth',3)
+end
+
+%%% pos clusters
+pos_clus_labels=unique(stat.posclusterslabelmat);
+pos_clus_labels(pos_clus_labels==0)=[];
+for nclus=1:length(pos_clus_labels)
+    temp_mat=repmat(stat.posclusterslabelmat,[size(old_TFRhann,1) 1 1]);
+    temp_mat(temp_mat~=pos_clus_labels(nclus))=0;
+    temp_mat(temp_mat==pos_clus_labels(nclus))=1;
+    temp_pow=old_TFRhann;
+    temp_pow(temp_mat==0)=NaN;
+    TF_Old_PosClus{nclus}=squeeze(nanmean(nanmean(temp_pow,2),3));
+    temp_mat=repmat(stat.posclusterslabelmat,[size(young_TFRhann,1) 1 1]);
+    temp_mat(temp_mat~=pos_clus_labels(nclus))=0;
+    temp_mat(temp_mat==pos_clus_labels(nclus))=1;
+    temp_pow=young_TFRhann;
+    temp_pow(temp_mat==0)=NaN;
+    TF_Young_PosClus{nclus}=squeeze(nanmean(nanmean(temp_pow,2),3));
+end
+
+neg_clus_labels=unique(stat.negclusterslabelmat);
+neg_clus_labels(neg_clus_labels==0)=[];
+for nclus=1:length(neg_clus_labels)
+    temp_mat=repmat(stat.negclusterslabelmat,[size(old_TFRhann,1) 1 1]);
+    temp_mat(temp_mat~=neg_clus_labels(nclus))=0;
+    temp_mat(temp_mat==neg_clus_labels(nclus))=1;
+    temp_pow=old_TFRhann;
+    temp_pow(temp_mat==0)=NaN;
+    TF_Old_NegClus{nclus}=squeeze(nanmean(nanmean(temp_pow,2),3));
+    temp_mat=repmat(stat.negclusterslabelmat,[size(young_TFRhann,1) 1 1]);
+    temp_mat(temp_mat~=neg_clus_labels(nclus))=0;
+    temp_mat(temp_mat==neg_clus_labels(nclus))=1;
+    temp_pow=young_TFRhann;
+    temp_pow(temp_mat==0)=NaN;
+    TF_Young_NegClus{nclus}=squeeze(nanmean(nanmean(temp_pow,2),3));
 end
 
 %% Uncorrected T/p Maps
@@ -198,3 +236,21 @@ t(P>.05)=0;
 figure;
 h1=simpleTFplot(t,faxis,TFwindow,0,0); colorbar;
 %}
+
+%% Behaviour Correlation
+
+clearvars('TF_All_PosClus','pos_clus_stats','TF_All_NegClus','neg_clus_stats');
+
+for nC=1:length(pos_clus_labels)
+    TF_All_PosClus=[TF_Old_PosClus{nC}' TF_Young_PosClus{nC}'];
+    [rho,pV]=corr(TF_All_PosClus', meanRT','type','spearman','rows','pairwise');
+    pos_clus_stats(nC,1)=rho;
+    pos_clus_stats(nC,2)=pV;
+end
+
+for nC=1:length(neg_clus_labels)
+    TF_All_NegClus=[TF_Old_NegClus{nC}' TF_Young_NegClus{nC}'];
+    [rho,pV]=corr(TF_All_NegClus', meanRT','type','spearman','rows','pairwise');
+    neg_clus_stats(nC,1)=rho;
+    neg_clus_stats(nC,2)=pV;
+end

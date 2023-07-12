@@ -85,7 +85,8 @@ end
 % And over the beta / theta freqs
 
 %% Cluster Permutation
-clusteralpha=0.05;
+%{
+clusteralpha=0.01;
 montecarloalpha=0.05;
 nperm=1000;
 tailFlag=0;
@@ -102,7 +103,7 @@ cfg_neighb.channel=layout.label;
 neighbours = ft_prepare_neighbours(cfg_neighb);
 
 [SW_clus]=get_clusterperm_lme_lsneurom(SW_est,clusteralpha,montecarloalpha,nperm,neighbours);
-
+%}
 %% Uncorrected t/p maps
 
 figure; zvalim=6;
@@ -116,10 +117,11 @@ end
 temp_topo=temp_topo(correspCh);
 temp_pV=temp_pV(correspCh);
 [p_fdr, p_masked] = fdr(temp_pV,.05);
-temp_topo(temp_pV>p_fdr)=0; % FDR corrected p
+% temp_topo(temp_pV>p_fdr)=0; % FDR corrected p
 % temp_topo(temp_pV>0.05)=0; % p>.05
-temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+% temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(temp_pV<p_fdr), 'pointsymbol','o','pointcolor','k','pointsize',72,'box','no','label','no')
 title(['t test - Theta Power (TF) * Group'])
 colormap(parula);
 colorbar; 
@@ -140,6 +142,7 @@ temp_topo(temp_pV>p_fdr)=0; % FDR corrected p
 % temp_topo(temp_pV>0.05)=0; % p>.05
 temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
 simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(temp_pV<p_fdr), 'pointsymbol','o','pointcolor','k','pointsize',72,'box','no','label','no')
 title(['t test - Beta Power (TF) * Group'])
 colormap(parula);
 colorbar; 
