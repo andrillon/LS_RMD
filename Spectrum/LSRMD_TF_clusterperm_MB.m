@@ -88,7 +88,7 @@ TFwindow=TFtimes(TFtimes>=-.70 & TFtimes<=0.50);
 % faxis=TFRhann.freq;
 
 %% Trim to electrode of interest & mean
-channels_to_plot={'Pz'};
+channels_to_plot={'Oz'};
 young_TFRhann=squeeze(young_TFRhann(:,match_str(newlabels,channels_to_plot{1}),:,:));
 old_TFRhann=squeeze(old_TFRhann(:,match_str(newlabels,channels_to_plot{1}),:,:));
 
@@ -283,4 +283,37 @@ for nC=1:length(neg_clus_labels)
     [rho,pV]=corr(TF_All_NegClus', meanRT','type','spearman','rows','pairwise');
     neg_clus_stats(nC,1)=rho;
     neg_clus_stats(nC,2)=pV;
+end
+
+%% CPP Stats Correlation
+
+clearvars('TF_All_PosClus','pos_clus_CPPons_stats','TF_All_NegClus','neg_clus_CPPons_stats','pos_clus_CPPrslope_stats','neg_clus_CPPrslope_stats');
+load([preproc_path 'CPP_stats']);
+
+for nC=1:length(pos_clus_labels)
+    TF_All_PosClus=[TF_Old_PosClus{nC}' TF_Young_PosClus{nC}'];
+    [rho,pV]=corr(TF_All_PosClus', CPP_onsets','type','spearman','rows','pairwise');
+    pos_clus_CPPons_stats(nC,1)=rho;
+    pos_clus_CPPons_stats(nC,2)=pV;
+end
+
+for nC=1:length(neg_clus_labels)
+    TF_All_NegClus=[TF_Old_NegClus{nC}' TF_Young_NegClus{nC}'];
+    [rho,pV]=corr(TF_All_NegClus', CPP_onsets','type','spearman','rows','pairwise');
+    neg_clus_CPPons_stats(nC,1)=rho;
+    neg_clus_CPPons_stats(nC,2)=pV;
+end
+
+for nC=1:length(pos_clus_labels)
+    TF_All_PosClus=[TF_Old_PosClus{nC}' TF_Young_PosClus{nC}'];
+    [rho,pV]=corr(TF_All_PosClus', CPPr_slopes','type','spearman','rows','pairwise');
+    pos_clus_CPPrslope_stats(nC,1)=rho;
+    pos_clus_CPPrslope_stats(nC,2)=pV;
+end
+
+for nC=1:length(neg_clus_labels)
+    TF_All_NegClus=[TF_Old_NegClus{nC}' TF_Young_NegClus{nC}'];
+    [rho,pV]=corr(TF_All_NegClus', CPPr_slopes','type','spearman','rows','pairwise');
+    neg_clus_CPPrslope_stats(nC,1)=rho;
+    neg_clus_CPPrslope_stats(nC,2)=pV;
 end
