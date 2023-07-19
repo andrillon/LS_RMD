@@ -88,7 +88,7 @@ TFwindow=TFtimes(TFtimes>=-.70 & TFtimes<=0.50);
 % faxis=TFRhann.freq;
 
 %% Trim to electrode of interest & mean
-channels_to_plot={'Oz'};
+channels_to_plot={'Fz'};
 young_TFRhann=squeeze(young_TFRhann(:,match_str(newlabels,channels_to_plot{1}),:,:));
 old_TFRhann=squeeze(old_TFRhann(:,match_str(newlabels,channels_to_plot{1}),:,:));
 
