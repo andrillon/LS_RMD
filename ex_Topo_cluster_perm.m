@@ -4,6 +4,9 @@ nperm=1000;
 tailFlag=0;
 layout=[];
 
+tf_groupA=randn(30,100,200);
+times=
+
 dat=cat(1,tf_groupA,tf_groupB); %tf_groupA: subj * freq * time
 design=[ones(size(tf_groupA,1),1) ; 2*ones(size(tf_groupB,1),1)];
 
