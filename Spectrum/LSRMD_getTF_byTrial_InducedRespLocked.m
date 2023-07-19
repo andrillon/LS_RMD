@@ -145,9 +145,9 @@ for nF=1:length(files)
         
     else
 %         load([preproc_path filesep SubID '_TF_perTrial_varwin_ICAcleaned.mat']); %Variable window
-%         load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_RespLocked.mat']); %Response locked, evoked
+        load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_RespLocked.mat']); %Response locked, evoked
 %         load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_RespLocked_ERPremoved.mat']);  %Induced, response locked
-        load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_ERPremoved.mat']);  %Induced, stimulus locked
+%         load([preproc_path filesep SubID '_TF_perTrial_ICAcleaned_ERPremoved.mat']);  %Induced, stimulus locked
 
 
     end
@@ -155,9 +155,9 @@ for nF=1:length(files)
 
     nFc=nFc+1;
     
-%     all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_rlock.powspctrm_bsl,1)); %Response locked, evoked
+    all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_rlock.powspctrm_bsl,1)); %Response locked, evoked
 %     all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_rlock_induced.powspctrm_bsl,1)); %Induced, response locked
-    all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_induced.powspctrm_bsl,1)); %Induced, stimulus locked
+%     all_TFRhann(nFc,:,:,:)=squeeze(nanmean(TFRhann_induced.powspctrm_bsl,1)); %Induced, stimulus locked
 
 
 %     all_TFRhann(nFc,:,:,:)=squeeze(nanmean((TFRhann.powspctrm_bsl(:,:,:,TFRhann.time>-0.5 & TFRhann.time<1.5)),1));
@@ -188,20 +188,21 @@ end
 
 %%
 %All 90% participants
-% TFtimes=TFRhann_rlock.time; %Response locked, evoked
+TFtimes=TFRhann_rlock.time; %Response locked, evoked
 % TFtimes=TFRhann_rlock_induced.time; %Response locked, induced
-TFtimes=TFRhann_induced.time; %Stimulus locked, induced
+% TFtimes=TFRhann_induced.time; %Stimulus locked, induced
 
-% faxis=TFRhann_rlock.freq; %Response locked, evoked
+faxis=TFRhann_rlock.freq; %Response locked, evoked
 % faxis=TFRhann_rlock_induced.freq; %Response locked, induced
-faxis=TFRhann_induced.freq; %Stimulus locked, induced
+% faxis=TFRhann_induced.freq; %Stimulus locked, induced
 
 
-myLabels={'Fz','Cz','Pz','Oz'};
+% myLabels={'Fz','Cz','Pz','Oz'};
+myLabels={'Fz','Pz'};
 f1=figure;
 maxAbsValues=[];
 for nCh=1:length(myLabels)
-    subplot(2,2,nCh);
+    subplot(2,1,nCh);
     simpleTFplot(squeeze(nanmean(all_TFRhann((all_group==4|all_group==5),match_str(newlabels,myLabels{nCh}),:,:),1)),faxis,TFtimes,0,0);
     format_fig;
     title(myLabels{nCh})
@@ -209,7 +210,7 @@ for nCh=1:length(myLabels)
     maxAbsValues=[maxAbsValues max(max(abs(squeeze(nanmean(all_TFRhann(:,match_str(newlabels,myLabels{nCh}),:,:),1)))))];
 end
 for nCh=1:length(myLabels)
-    subplot(2,2,nCh);
+    subplot(2,1,nCh);
 caxis([-1 1]*max(maxAbsValues))
 end
 %All younger participants
@@ -238,7 +239,7 @@ end
 %Younger 90% coherence
 f2=figure;
 for nCh=1:length(myLabels)
-    subplot(2,2,nCh);
+    subplot(2,1,nCh);
     simpleTFplot(squeeze(nanmean(all_TFRhann((all_group==4),match_str(newlabels,myLabels{nCh}),:,:),1)),faxis,TFtimes,0,0);
     format_fig;
     title(myLabels{nCh})
@@ -246,10 +247,17 @@ colorbar;
     maxAbsValues=[maxAbsValues max(max(abs(squeeze(nanmean(all_TFRhann(:,match_str(newlabels,myLabels{nCh}),:,:),1)))))];
 end
 
+figure;
+    simpleTFplot(squeeze(nanmean(all_TFRhann((all_group==5),match_str(newlabels,myLabels{2}),:,:),1)),faxis,TFtimes,0,0);
+    format_fig;
+    title(myLabels{2})
+colorbar;
+    maxAbsValues=[maxAbsValues max(max(abs(squeeze(nanmean(all_TFRhann(:,match_str(newlabels,myLabels{2}),:,:),1)))))];
+
 %Older 90% coherence
 f3=figure;
 for nCh=1:length(myLabels)
-    subplot(2,2,nCh);
+    subplot(2,1,nCh);
     simpleTFplot(squeeze(nanmean(all_TFRhann((all_group==5),match_str(newlabels,myLabels{nCh}),:,:),1)),faxis,TFtimes,0,0);
     format_fig;
     title(myLabels{nCh})
@@ -259,15 +267,15 @@ end
 
 for nCh=1:length(myLabels)
     figure(f1);
-    subplot(2,2,nCh);
+    subplot(2,1,nCh);
 caxis([-1 1]*max(maxAbsValues))
 
 figure(f2);
-    subplot(2,2,nCh);
+    subplot(2,1,nCh);
 caxis([-1 1]*max(maxAbsValues))
 
 figure(f3);
-    subplot(2,2,nCh);
+    subplot(2,1,nCh);
 caxis([-1 1]*max(maxAbsValues))
 end
 %% Difference TF
