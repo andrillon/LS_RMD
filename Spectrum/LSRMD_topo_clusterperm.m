@@ -147,3 +147,24 @@ title(['t test - Beta Power (TF) * Group'])
 colormap(parula);
 colorbar; 
 caxis([-1 1]*zvalim);
+
+figure; zvalim=6;
+temp_topo=[]; temp_pV=[];
+for nCh=1:length(newlabels)
+    [~,P,~,stats]=ttest2(squeeze(nanmean(nanmean(old_TFRhann(:,nCh,faxis>8 & faxis<11,TFtimes>=-.20 & TFtimes<=0.10),3),4)), ...
+        squeeze(nanmean(nanmean(young_TFRhann(:,nCh,faxis>8 & faxis<11,TFtimes>=-.20 & TFtimes<=0.10),3),4)));
+    temp_topo(nCh)=stats.tstat;
+    temp_pV(nCh)=P;
+end
+temp_topo=temp_topo(correspCh);
+temp_pV=temp_pV(correspCh);
+[p_fdr, p_masked] = fdr(temp_pV,.05);
+temp_topo(temp_pV>p_fdr)=0; % FDR corrected p
+% temp_topo(temp_pV>0.05)=0; % p>.05
+temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(temp_pV<p_fdr), 'pointsymbol','o','pointcolor','k','pointsize',72,'box','no','label','no')
+title(['t test - Alpha Power (TF) * Group'])
+colormap(parula);
+colorbar; 
+caxis([-1 1]*zvalim);
