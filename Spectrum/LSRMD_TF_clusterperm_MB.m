@@ -228,32 +228,39 @@ for nclus=1:length(neg_clus_labels)
 end
 
 % trying multicolour contours
+ cmap=cbrewer('div','PuOr',10);
+ cmap_negclus={cmap(1:3,:)}; %set colors
+cmap_posclus={cmap(end-2:end,:)};
+
 figure;
 h1=simpleTFplot(TF_diff,faxis,TFwindow,0,0); %recreate TF diff plot
 caxis([-1 1]*max(max(abs(TF_diff))));
-cmap_negclus={[1 0 0],[0 1 0],[0 0 1],[0 1 1]}; %set colors
-cmap_posclus={[1 0 1],[1 1 0]};
+% cmap_negclus={[1 0 0],[0 1 0],[0 0 1],[0 1 1]}; %set colors
+% cmap_posclus={[1 0 1],[1 1 0]};
 
-stat.newmask=zeros(size(stat.mask));
+stat.newmask2=zeros(size(stat.mask));
+stat.newmask2(stat.negclusterslabelmat~=0 | stat.posclusterslabelmat~=0)=1;
+newmask = squeeze(stat.newmask2);
+newmask(newmask(:) == 0) = .5;
+alpha(h1, newmask); hold on;
+
 for nclus=1:length(neg_clus_labels)
+    stat.newmask=zeros(size(stat.mask));
     stat.newmask(stat.negclusterslabelmat==nclus)=nclus;
     newmask = squeeze(stat.newmask);
     newmask(newmask(:) == 0) = .5;
-    alpha(h1, newmask); hold on;
     if ~isempty(newmask==nclus)
-        contour(TFwindow, faxis,newmask,1,'Color',cmap_negclus{nclus},'LineWidth',3)
+        contour(TFwindow, 1:length(faxis),newmask,1,'Color',cmap_negclus{1}(nclus,:),'LineWidth',3)
     end
 end
 
-stat.newmask=zeros(size(stat.mask));
 for nclus=1:length(pos_clus_labels)
     stat.newmask=zeros(size(stat.mask));
-    stat.newmask(stat.posclusterslabelmat==nclus)=1;
+    stat.newmask(stat.posclusterslabelmat==nclus)=nclus;
     newmask = squeeze(stat.newmask);
     newmask(newmask(:) == 0) = .5;
-    alpha(h1, newmask); hold on;
-    if ~isempty(newmask==1)
-        contour(TFwindow, faxis,newmask,.5,'Color',cmap_posclus{nclus},'LineWidth',3)
+    if ~isempty(newmask==nclus)
+        contour(TFwindow, 1:length(faxis),newmask,1,'Color',cmap_posclus{1}(nclus,:),'LineWidth',3)
     end
 end
 
