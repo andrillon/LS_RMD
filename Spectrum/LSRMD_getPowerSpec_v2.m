@@ -1249,6 +1249,11 @@ temp_topo=[]; temp_pV=[];
 for nCh=1:length(newlabels)
     [rho,pV]=corr(squeeze(theta_temp(:,nCh)), ...
         meanRT','type','spearman','rows','pairwise');
+    % Make a table first with power (theta, etc) group (old young) and
+    % behaviour (RT)
+    % mdl=fitlm(Power_table,'Theta~1+Group*RT');
+    % Examine mdl itself (type mdl in command windwo) to see the order of effect in the table
+    % mdl.Coefficients.tStat
     temp_topo(nCh)=rho;
     temp_pV(nCh)=pV;
 end
