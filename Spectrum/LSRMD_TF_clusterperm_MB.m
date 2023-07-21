@@ -228,7 +228,7 @@ for nclus=1:length(neg_clus_labels)
 end
 
 % trying multicolour contours
- cmap=cbrewer('div','PuOr',10);
+ cmap=cbrewer('seq','oranges',10);
  cmap_negclus={cmap(1:3,:)}; %set colors
 cmap_posclus={cmap(end-2:end,:)};
 
