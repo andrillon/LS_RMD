@@ -32,7 +32,7 @@ files=dir([preproc_path filesep 'ICAcleaned_eblock_ft_*.mat']);
 %                  'HN996','HN998','HN999'};
 
 res_mat=[];
-redo=0; complete=0; mix_or_osci=0; %0 = mixed, 1 = oscillatory
+redo=0; complete=0; mix_or_osci=1; %0 = mixed, 1 = oscillatory
 
 % m = 1; t = 1; h = 1; a = 1; hn = 1;
 %
@@ -1159,16 +1159,16 @@ end
 % each electrode
 for nE=1:length(newlabels)
     for nP=1:size(all_osci,1)
-%         theta_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>4 & faxis<7),3));
-%         alpha_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>8 & faxis<11),3));
-%         delta_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>1 & faxis<3),3));
-%         slow_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>1 & faxis<7),3));
-%         beta_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>12 & faxis<29),3));
-        theta_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>4 & faxis<7),3));
-        alpha_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>8 & faxis<11),3));
-        delta_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>1 & faxis<3),3));
-        slow_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>1 & faxis<7),3));
-        beta_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>12 & faxis<29),3));
+        theta_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>4 & faxis<7),3));
+        alpha_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>8 & faxis<11),3));
+        delta_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>1 & faxis<3),3));
+        slow_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>1 & faxis<7),3));
+        beta_temp(nP,nE)=squeeze(nanmean(all_osci(nP,nE,faxis>12 & faxis<29),3));
+%         theta_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>4 & faxis<7),3));
+%         alpha_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>8 & faxis<11),3));
+%         delta_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>1 & faxis<3),3));
+%         slow_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>1 & faxis<7),3));
+%         beta_temp(nP,nE)=squeeze(nanmean(all_pow(nP,nE,faxis>12 & faxis<29),3));
     end
 end
 
@@ -1251,7 +1251,7 @@ for nCh=1:length(newlabels)
         meanRT','type','spearman','rows','pairwise');
     % Make a table first with power (theta, etc) group (old young) and
     % behaviour (RT)
-    % mdl=fitlm(Power_table,'Theta~1+Group*RT');
+    % mdl=fitlm(Power_table,'Theta~Group+RT+Group*RT');
     % Examine mdl itself (type mdl in command windwo) to see the order of effect in the table
     % mdl.Coefficients.tStat
     temp_topo(nCh)=rho;
@@ -1452,74 +1452,75 @@ caxis([-1 1]*zvalim);
 [~,P,~,stats]=ttest2(squeeze(roi_theta_temp(:,all_agegroup==0)), ...
         squeeze(roi_theta_temp(:,all_agegroup==1)));
     
-%%
-% % alphaFreqs=find((faxis>8 & faxis<8.6) | (faxis>8.95 & faxis<9.8) | (faxis>10.125 & faxis<11));
-% alphaFreqs=find((faxis>8 & faxis<11));
-% figure; set(gcf,'Position',[213         173        1027/4         805/3]);
-% % subplot(1,4,1);
-% format_fig;
-% jbfill([8 11],[-5 -5],[-.5 -.5],[50,205,50]/256,[50,205,50]/256,1,0.2);
-% hold on;
-% for nD=1:4
-%     simpleTplot(faxis',squeeze(nanmean(all_pow(:,nD,:,match_str(chLabels,'Cz'),:),3)),0,Colors(nD,:),[0 0.05 0.0001 1000],'-',0.1,1,0,1,1);
-% end
-% xlim([2 30])
-% ylim([[-5 -0.5]])
-% xlabel('Frequency (Hz)')
-% ylabel('Power (dB)')
-% print([powerspec_path filesep 'Topo_Alpha_Clusters_byFreq_v5.eps'],'-dpng', '-r300');
-%
-% figure; set(gcf,'Position',[1 1 880 880]);
-% winTime=[0.05 0.3];
-% for nD=1:size(PosDrugs,1)
-%     for nD2=1:size(PosDrugs,2)
-%         if isempty(PosDrugs{nD,nD2})
-%             continue;
-%         end
-%     subplot(3,3,3*(nD-1)+(nD2)); format_fig;
-%     temp_topo=[];
-%     for nCh=1:length(layout.label)-2
-%         temp1=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(1),:,match_str(chLabels,layout.label(nCh)),alphaFreqs),3),5));
-%         temp0=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(2),:,match_str(chLabels,layout.label(nCh)),alphaFreqs),3),5));
-%         [h, pV, ~ , stats]=ttest(temp1,temp0);
-%         temp_topo(nCh)=stats.tstat;%-...
-%         %             squeeze(nanmean(nanmean(nanmean(all_ERP_NT_offset(:,nD,match_str(chLabels,layout.label(nCh)),xTime_offset>winTime(1) & xTime_offset<winTime(2)),1),2),4));
-%     end
-%     temp_topo1=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(2),:,correspCh,alphaFreqs),3),5));
-%     temp_topo2=squeeze(nanmean(nanmean(all_pow(:,PosDrugs{nD,nD2}(1),:,correspCh,alphaFreqs),3),5));
-%     [stat] = compute_Topo_clusterPerm_v2(temp_topo1,temp_topo2,0,chLabels(correspCh),data_clean.fsample,0.05,0.05,1000,layout);
-%
-%
-%     simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-%     colormap(cmap2);
-%
-%     if isfield(stat,'posclusters') && ~isempty(stat.posclusters)
-%         sigClusters=find([stat.posclusters.prob]<0.05);
-%         for k=1:length(sigClusters)
-%             ft_plot_lay_me(layout, 'chanindx',find(stat.posclusterslabelmat==sigClusters(k)),'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
-%         end
-%     end
-%     if isfield(stat,'negclusters') && ~isempty(stat.negclusters)
-%         sigClusters=find([stat.negclusters.prob]<0.05);
-%         for k=1:length(sigClusters)
-%             ft_plot_lay_me(layout, 'chanindx',find(stat.negclusterslabelmat==sigClusters(k)),'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
-%         end
-%     end
-%     if nD==4
-%         hb=colorbar('Position',[0.9195    0.6373    0.0143    0.2881]);
-%     end
-%     caxis([-1 1]*5);
-%     title(sprintf('%s vs %s',ColorsDlabels{PosDrugs{nD,nD2}(1)},ColorsDlabels{PosDrugs{nD,nD2}(2)}));
-%     end
-% end
-%
-% print([powerspec_path filesep 'Topo_Alpha_Clusters_v5.eps'],'-dpng', '-r300');
+%% Model Attempt
 
-%%
-% figure; set(gcf,'Position',[213         173        1027/4         805/3]);
-%
-% print('-dpng', '-r300', '../../Figures/Cz_PowSpec_v5.png')
-%
-% figure; set(gcf,'Position',[213         173        1027/4         805/3]);
-%
-% % ylim([[-5 -0.5]])
+figure;
+temp_topo=[]; temp_pV=[]; Preds={'RT','Group','RT*Group'};
+
+for nPr=1:length(Preds)
+    subplot(1,length(Preds),nPr);
+    for nCh=1:length(newlabels)
+        Power_table=table(squeeze(theta_temp(:,nCh)),meanRT,all_agegroup','VariableNames',{'Theta','RT','Group'});
+        mdl=fitlm(Power_table,'Theta~Group+RT+Group*RT');
+        % Make a table first with power (theta, etc) group (old young) and
+        % behaviour (RT)
+        % mdl=fitlm(Power_table,'Theta~Group+RT+Group*RT');
+        % Examine mdl itself (type mdl in command windwo) to see the order of effect in the table
+        % mdl.Coefficients.tStat
+        temp_topo(nCh)=mdl.Coefficients.tStat(nPr+1);
+        temp_pV(nCh)=mdl.Coefficients.pValue(nPr+1);
+    end
+    temp_topo=temp_topo(correspCh);
+    temp_pV=temp_pV(correspCh);
+    temp_topo(temp_pV>0.05)=0;
+    temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+    simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+    
+    title(['Model Fit: Theta x ' Preds{nPr}])
+    colormap(parula);
+    colorbar; caxis([-1 1]*max(abs(temp_topo)));
+end
+
+figure;
+temp_topo=[]; temp_pV=[]; Preds={'RT','Group','RT*Group'};
+
+for nPr=1:length(Preds)
+    subplot(1,length(Preds),nPr);
+    for nCh=1:length(newlabels)
+        Power_table=table(squeeze(alpha_temp(:,nCh)),meanRT,all_agegroup','VariableNames',{'Alpha','RT','Group'});
+        mdl=fitlm(Power_table,'Alpha~Group+RT+Group*RT');
+        temp_topo(nCh)=mdl.Coefficients.tStat(nPr+1);
+        temp_pV(nCh)=mdl.Coefficients.pValue(nPr+1);
+    end
+    temp_topo=temp_topo(correspCh);
+    temp_pV=temp_pV(correspCh);
+    temp_topo(temp_pV>0.05)=0;
+    temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+    simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+    
+    title(['Model Fit: Alpha x ' Preds{nPr}])
+    colormap(parula);
+    colorbar; caxis([-1 1]*max(abs(temp_topo)));
+end
+
+figure;
+temp_topo=[]; temp_pV=[]; Preds={'RT','Group','RT*Group'};
+
+for nPr=1:length(Preds)
+    subplot(1,length(Preds),nPr);
+    for nCh=1:length(newlabels)
+        Power_table=table(squeeze(beta_temp(:,nCh)),meanRT,all_agegroup','VariableNames',{'Beta','RT','Group'});
+        mdl=fitlm(Power_table,'Beta~Group+RT+Group*RT');
+        temp_topo(nCh)=mdl.Coefficients.tStat(nPr+1);
+        temp_pV(nCh)=mdl.Coefficients.pValue(nPr+1);
+    end
+    temp_topo=temp_topo(correspCh);
+    temp_pV=temp_pV(correspCh);
+    temp_topo(temp_pV>0.05)=0;
+    temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+    simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
+    
+    title(['Model Fit: Beta x ' Preds{nPr}])
+    colormap(parula);
+    colorbar; caxis([-1 1]*max(abs(temp_topo)));
+end
