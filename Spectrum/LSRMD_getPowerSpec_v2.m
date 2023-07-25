@@ -1455,13 +1455,14 @@ caxis([-1 1]*zvalim);
 %% Model Attempt
 
 figure;
-temp_topo=[]; temp_pV=[]; Preds={'RT','Group','RT*Group'};
+temp_topo=[]; temp_pV=[]; Preds={'RT','Group'};
 
 for nPr=1:length(Preds)
     subplot(1,length(Preds),nPr);
     for nCh=1:length(newlabels)
         Power_table=table(squeeze(theta_temp(:,nCh)),meanRT,all_agegroup','VariableNames',{'Theta','RT','Group'});
-        mdl=fitlm(Power_table,'Theta~Group+RT+Group*RT');
+        Power_table.Group=categorical(Power_table.Group);
+        mdl=fitlme(Power_table,'Theta~Group+RT');
         % Make a table first with power (theta, etc) group (old young) and
         % behaviour (RT)
         % mdl=fitlm(Power_table,'Theta~Group+RT+Group*RT');
@@ -1472,55 +1473,60 @@ for nPr=1:length(Preds)
     end
     temp_topo=temp_topo(correspCh);
     temp_pV=temp_pV(correspCh);
-    temp_topo(temp_pV>0.05)=0;
-    temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+%     temp_topo(temp_pV>0.05)=0;
     simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-    
+        ft_plot_lay_me(layout, 'chanindx', find((temp_pV<0.05)), 'pointsymbol','o','pointcolor',[.5 .5 .5],'pointsize',72,'box','no','label','no')
+        ft_plot_lay_me(layout, 'chanindx', find((temp_pV<fdr(temp_pV,0.05))), 'pointsymbol','o','pointcolor','k','pointsize',72,'box','no','label','no')
+
     title(['Model Fit: Theta x ' Preds{nPr}])
     colormap(parula);
-    colorbar; caxis([-1 1]*max(abs(temp_topo)));
+    colorbar; caxis([-1 1]*3);
 end
 
 figure;
-temp_topo=[]; temp_pV=[]; Preds={'RT','Group','RT*Group'};
+temp_topo=[]; temp_pV=[]; Preds={'RT','Group'};
 
 for nPr=1:length(Preds)
     subplot(1,length(Preds),nPr);
     for nCh=1:length(newlabels)
         Power_table=table(squeeze(alpha_temp(:,nCh)),meanRT,all_agegroup','VariableNames',{'Alpha','RT','Group'});
-        mdl=fitlm(Power_table,'Alpha~Group+RT+Group*RT');
+               Power_table.Group=categorical(Power_table.Group);
+ mdl=fitlme(Power_table,'Alpha~Group+RT');
         temp_topo(nCh)=mdl.Coefficients.tStat(nPr+1);
         temp_pV(nCh)=mdl.Coefficients.pValue(nPr+1);
     end
     temp_topo=temp_topo(correspCh);
     temp_pV=temp_pV(correspCh);
-    temp_topo(temp_pV>0.05)=0;
-    temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+%     temp_topo(temp_pV>0.05)=0;
     simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-    
+        ft_plot_lay_me(layout, 'chanindx', find((temp_pV<0.05)), 'pointsymbol','o','pointcolor',[.5 .5 .5],'pointsize',72,'box','no','label','no')
+        ft_plot_lay_me(layout, 'chanindx', find((temp_pV<fdr(temp_pV,0.05))), 'pointsymbol','o','pointcolor','k','pointsize',72,'box','no','label','no')
+
     title(['Model Fit: Alpha x ' Preds{nPr}])
     colormap(parula);
-    colorbar; caxis([-1 1]*max(abs(temp_topo)));
+    colorbar; caxis([-1 1]*3);
 end
 
 figure;
-temp_topo=[]; temp_pV=[]; Preds={'RT','Group','RT*Group'};
+temp_topo=[]; temp_pV=[]; Preds={'RT','Group'};
 
 for nPr=1:length(Preds)
     subplot(1,length(Preds),nPr);
     for nCh=1:length(newlabels)
         Power_table=table(squeeze(beta_temp(:,nCh)),meanRT,all_agegroup','VariableNames',{'Beta','RT','Group'});
-        mdl=fitlm(Power_table,'Beta~Group+RT+Group*RT');
+            Power_table.Group=categorical(Power_table.Group);
+    mdl=fitlme(Power_table,'Beta~Group+RT');
         temp_topo(nCh)=mdl.Coefficients.tStat(nPr+1);
         temp_pV(nCh)=mdl.Coefficients.pValue(nPr+1);
     end
     temp_topo=temp_topo(correspCh);
     temp_pV=temp_pV(correspCh);
-    temp_topo(temp_pV>0.05)=0;
-    temp_topo(match_str(layout.label,{'TP7','TP8'}))=NaN;
+%     temp_topo(temp_pV>0.05)=0;
     simpleTopoPlot_ft(temp_topo', layout,'on',[],0,1);
-    
+        ft_plot_lay_me(layout, 'chanindx', find((temp_pV<0.05)), 'pointsymbol','o','pointcolor',[.5 .5 .5],'pointsize',72,'box','no','label','no')
+        ft_plot_lay_me(layout, 'chanindx', find((temp_pV<fdr(temp_pV,0.05))), 'pointsymbol','o','pointcolor','k','pointsize',72,'box','no','label','no')
+
     title(['Model Fit: Beta x ' Preds{nPr}])
     colormap(parula);
-    colorbar; caxis([-1 1]*max(abs(temp_topo)));
+    colorbar; caxis([-1 1]*3);
 end
